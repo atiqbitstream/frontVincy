@@ -1,138 +1,131 @@
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { useNavigate, useLocation, Navigate } from "react-router-dom";
+import { toast } from "sonner";
 
-import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
+// Environment variable for API base URL
+const API_URL = import.meta.env.VITE_API_URL;
 
-interface User {
-  id: string;
+type User = {
+  id: number;
+  full_name: string;
   email: string;
-  fullName: string;
-  token: string;
+  gender: string;
+  dob: string;
+  nationality: string;
+  phone: string;
+  city: string;
+  country: string;
+  occupation?: string;
+  marital_status?: string;
+  sleep_hours?: string;
+  exercise_frequency?: string;
+  smoking_status?: boolean;
+  alcohol_consumption?: boolean;
   isAdmin?: boolean;
+};
+
+interface SignupData {
+  full_name: string;
+  email: string;
+  password: string;
+  gender: string;
+  dob: string;
+  nationality: string;
+  phone: string;
+  city: string;
+  country: string;
+  occupation: string;
+  marital_status: string;
+  sleep_hours: string;
+  exercise_frequency: string;
+  smoking_status: boolean;
+  alcohol_consumption: boolean;
 }
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  signup: (data: SignupData) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
-  adminLogin: (email: string, password: string) => Promise<void>;
-  signup: (userData: any) => Promise<void>;
   logout: () => void;
-  isAuthenticated: boolean;
-  isAdmin: boolean;
 }
 
-const AuthContext = createContext<AuthContextType | null>(null);
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  // Fetch current user if token exists on mount
   useEffect(() => {
-    // Check if user is logged in
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      try {
-        const parsedUser = JSON.parse(storedUser);
-        setUser(parsedUser);
-      } catch (error) {
-        console.error('Failed to parse stored user:', error);
-        localStorage.removeItem('user');
-      }
-    }
-    setLoading(false);
+    const token = localStorage.getItem("token");
+    if (token) fetchUser(token);
   }, []);
+
+  const fetchUser = async (token: string) => {
+    try {
+      const res = await fetch(`${API_URL}/users/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const me: User = await res.json();
+        setUser(me);
+      } else {
+        logout();
+      }
+    } catch (error) {
+      console.error("Fetch user failed:", error);
+      logout();
+    }
+  };
+
+  const signup = async (data: SignupData) => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/signup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.detail || "Signup failed");
+      }
+      toast.success("Signup successful! Please log in.");
+      navigate("/login");
+    } catch (error: any) {
+      console.error("Signup error:", error);
+      toast.error(error.message || "Signup failed. Please try again.");
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const login = async (email: string, password: string) => {
     setLoading(true);
-    
     try {
-      // In a real app, this would be an API call
-      // For now, we'll mock a successful login
-      console.log('Logging in with:', email, password);
-      
-      // Mock successful login response
-      const mockUser = {
-        id: '1234',
-        email: email,
-        fullName: 'Test User',
-        token: 'mock-jwt-token',
-        isAdmin: false
-      };
-      
-      // Store user in localStorage
-      localStorage.setItem('user', JSON.stringify(mockUser));
-      setUser(mockUser);
-      
-      toast.success('Login successful!');
-      navigate('/dashboard');
-    } catch (error) {
-      console.error('Login failed:', error);
-      toast.error('Login failed. Please check your credentials.');
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  };
+      const form = new URLSearchParams();
+      form.append("username", email);
+      form.append("password", password);
 
-  const adminLogin = async (email: string, password: string) => {
-    setLoading(true);
-    
-    try {
-      console.log('Admin logging in with:', email, password);
-      
-      // Check if this is an admin email (in a real app, this would be an API call)
-      if (email === 'admin@example.com' && password === 'admin123') {
-        const mockAdminUser = {
-          id: 'admin-1',
-          email: email,
-          fullName: 'Admin User',
-          token: 'mock-admin-jwt-token',
-          isAdmin: true
-        };
-        
-        localStorage.setItem('user', JSON.stringify(mockAdminUser));
-        setUser(mockAdminUser);
-        
-        toast.success('Admin login successful!');
-        navigate('/admin/dashboard');
-      } else {
-        toast.error('Invalid admin credentials.');
-        throw new Error('Invalid admin credentials');
-      }
-    } catch (error) {
-      console.error('Admin login failed:', error);
-      toast.error('Admin login failed. Please check your credentials.');
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  };
+      const res = await fetch(`${API_URL}/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: form.toString(),
+      });
 
-  const signup = async (userData: any) => {
-    setLoading(true);
-    
-    try {
-      // In a real app, this would be an API call
-      console.log('Signing up with:', userData);
-      
-      // Mock successful signup
-      const mockUser = {
-        id: '1234',
-        email: userData.email,
-        fullName: userData.full_name,
-        token: 'mock-jwt-token',
-        isAdmin: false
-      };
-      
-      // Store user in localStorage but don't log them in right away
-      // Just redirect to login page after successful signup
-      toast.success('Signup successful! Please log in.');
-      navigate('/login');
-    } catch (error) {
-      console.error('Signup failed:', error);
-      toast.error('Signup failed. Please try again.');
+      if (!res.ok) throw new Error("Invalid credentials");
+
+      const { access_token } = await res.json();
+      localStorage.setItem("token", access_token);
+      await fetchUser(access_token);
+      toast.success("Login successful!");
+      navigate("/dashboard");
+    } catch (error: any) {
+      console.error("Login error:", error);
+      toast.error(error.message || "Login failed");
       throw error;
     } finally {
       setLoading(false);
@@ -140,66 +133,50 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = () => {
-    localStorage.removeItem('user');
+    localStorage.removeItem("token");
     setUser(null);
-    toast.info('You have been logged out');
-    navigate('/login');
+    navigate("/login");
   };
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        loading,
-        login,
-        adminLogin,
-        signup,
-        logout,
-        isAuthenticated: !!user,
-        isAdmin: !!user?.isAdmin
-      }}
-    >
+    <AuthContext.Provider value={{ user, loading, signup, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = () => {
+export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (!context) throw new Error("useAuth must be used within an AuthProvider");
   return context;
 };
 
-// Route guard component
-export const RequireAuth = ({ children, adminOnly = false }: { children: ReactNode; adminOnly?: boolean }) => {
-  const { isAuthenticated, isAdmin, loading } = useAuth();
+export const RequireAuth = ({ children }: { children: ReactNode }) => {
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
-  
+  const location = useLocation();
+
   useEffect(() => {
-    if (!loading) {
-      if (!isAuthenticated) {
-        navigate('/login');
-      } else if (adminOnly && !isAdmin) {
-        toast.error('You do not have permission to access this page');
-        navigate('/dashboard');
-      }
+    if (!loading && !user) {
+      navigate("/login", { state: { from: location } });
     }
-  }, [isAuthenticated, isAdmin, loading, navigate, adminOnly]);
-  
-  if (loading) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>;
-  }
-  
-  if (adminOnly) {
-    return isAuthenticated && isAdmin ? <>{children}</> : null;
-  }
-  
-  return isAuthenticated ? <>{children}</> : null;
+  }, [loading, user, navigate, location]);
+
+  if (loading) return <div className="flex items-center justify-center h-screen">Loading...</div>;
+  return user ? <>{children}</> : null;
 };
 
-// Admin route guard component
 export const RequireAdmin = ({ children }: { children: ReactNode }) => {
-  return <RequireAuth adminOnly>{children}</RequireAuth>;
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && (!user || !user.isAdmin)) {
+      toast.error("You do not have permission to access this page");
+      navigate("/dashboard");
+    }
+  }, [loading, user, navigate]);
+
+  if (loading) return <div className="flex items-center justify-center h-screen">Loading...</div>;
+  return user && user.isAdmin ? <>{children}</> : null;
 };
