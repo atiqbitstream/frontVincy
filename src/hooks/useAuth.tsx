@@ -1,11 +1,19 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+// src/hooks/useAuth.tsx
+
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
 import { useNavigate, useLocation, Navigate } from "react-router-dom";
 import { toast } from "sonner";
 
 // Environment variable for API base URL
 const API_URL = import.meta.env.VITE_API_URL;
 
-type User = {
+export type User = {
   id: number;
   full_name: string;
   email: string;
@@ -24,7 +32,7 @@ type User = {
   isAdmin?: boolean;
 };
 
-interface SignupData {
+export interface SignupData {
   full_name: string;
   email: string;
   password: string;
@@ -44,6 +52,8 @@ interface SignupData {
 
 interface AuthContextType {
   user: User | null;
+  token: string | null;
+  isAuthenticated: boolean;
   loading: boolean;
   signup: (data: SignupData) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
@@ -54,28 +64,33 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
-  // Fetch current user if token exists on mount
+  // On mount, load token from localStorage & fetch current user
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) fetchUser(token);
+    const storedToken = localStorage.getItem("token");
+    if (storedToken) {
+      setToken(storedToken);
+      fetchUser(storedToken);
+    }
   }, []);
 
-  const fetchUser = async (token: string) => {
+  const fetchUser = async (jwt: string) => {
     try {
       const res = await fetch(`${API_URL}/users/me`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${jwt}` },
       });
-      if (res.ok) {
-        const me: User = await res.json();
-        setUser(me);
-      } else {
+      if (!res.ok) {
         logout();
+        return;
       }
-    } catch (error) {
-      console.error("Fetch user failed:", error);
+      const me: User = await res.json();
+      setUser(me);
+    } catch (err) {
+      console.error("Fetch user failed:", err);
       logout();
     }
   };
@@ -120,9 +135,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       const { access_token } = await res.json();
       localStorage.setItem("token", access_token);
+      setToken(access_token);
       await fetchUser(access_token);
       toast.success("Login successful!");
-      navigate("/dashboard");
+      // Redirect back to where we came from, or dashboard
+      const from = (location.state as any)?.from?.pathname || "/dashboard";
+      navigate(from, { replace: true });
     } catch (error: any) {
       console.error("Login error:", error);
       toast.error(error.message || "Login failed");
@@ -134,12 +152,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = () => {
     localStorage.removeItem("token");
+    setToken(null);
     setUser(null);
     navigate("/login");
   };
 
+  const isAuthenticated = Boolean(user && token);
+
   return (
-    <AuthContext.Provider value={{ user, loading, signup, login, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        token,
+        isAuthenticated,
+        loading,
+        signup,
+        login,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -147,36 +178,50 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
-  if (!context) throw new Error("useAuth must be used within an AuthProvider");
+  if (!context) throw new Error("useAuth must be used within AuthProvider");
   return context;
 };
 
 export const RequireAuth = ({ children }: { children: ReactNode }) => {
-  const { user, loading } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!loading && !isAuthenticated) {
       navigate("/login", { state: { from: location } });
     }
-  }, [loading, user, navigate, location]);
+  }, [loading, isAuthenticated, navigate, location]);
 
-  if (loading) return <div className="flex items-center justify-center h-screen">Loading...</div>;
-  return user ? <>{children}</> : null;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        Loading...
+      </div>
+    );
+  }
+
+  return isAuthenticated ? <>{children}</> : null;
 };
 
 export const RequireAdmin = ({ children }: { children: ReactNode }) => {
-  const { user, loading } = useAuth();
+  const { user, loading, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && (!user || !user.isAdmin)) {
+    if (!loading && (!isAuthenticated || !user?.isAdmin)) {
       toast.error("You do not have permission to access this page");
       navigate("/dashboard");
     }
-  }, [loading, user, navigate]);
+  }, [loading, isAuthenticated, user, navigate]);
 
-  if (loading) return <div className="flex items-center justify-center h-screen">Loading...</div>;
-  return user && user.isAdmin ? <>{children}</> : null;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        Loading...
+      </div>
+    );
+  }
+
+  return isAuthenticated && user?.isAdmin ? <>{children}</> : null;
 };

@@ -60,14 +60,14 @@ const Dashboard = () => {
       description: "Control ambient sound therapy settings",
       icon: <Volume2 className="h-5 w-5" />,
       endpoint: "/sound",
-      historyEndpoint: "/sound-history"
+      historyEndpoint: "/sound"
     },
     {
       title: "LED Light Therapy",
       description: "Adjust LED light color for therapy",
       icon: <Lightbulb className="h-5 w-5" />,
       endpoint: "/led-color",
-      historyEndpoint: "/led-history",
+      historyEndpoint: "/led-color",
       hasColorPicker: true
     },
     {
@@ -75,14 +75,14 @@ const Dashboard = () => {
       description: "Manage steam output and duration",
       icon: <CloudFog className="h-5 w-5" />,
       endpoint: "/steam",
-      historyEndpoint: "/steam-history"
+      historyEndpoint: "/steam"
     },
     {
       title: "Nanoflicker",
       description: "Control nanoflicker frequency and intensity",
       icon: <Award className="h-5 w-5" />,
       endpoint: "/nano-flicker",
-      historyEndpoint: "/nanoflicker-history"
+      historyEndpoint: "/nano-flicker"
     },
     {
       title: "Temperature Tank",
@@ -90,14 +90,14 @@ const Dashboard = () => {
       icon: <Thermometer className="h-5 w-5" />,
       hasSlider: true,
       endpoint: "/temp-tank",
-      historyEndpoint: "/temperature-tank-history"
+      historyEndpoint: "/temp-tank"
     },
     {
       title: "Water Pump",
       description: "Control water circulation system",
       icon: <Waves className="h-5 w-5" />,
       endpoint: "/water-pump",
-      historyEndpoint: "/water-pump-history"
+      historyEndpoint: "/water-pump"
     }
   ];
 
