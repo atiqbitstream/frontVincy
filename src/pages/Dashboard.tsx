@@ -59,14 +59,14 @@ const Dashboard = () => {
       title: "Sound System",
       description: "Control ambient sound therapy settings",
       icon: <Volume2 className="h-5 w-5" />,
-      endpoint: "/sounds",
+      endpoint: "/sound",
       historyEndpoint: "/sound-history"
     },
     {
       title: "LED Light Therapy",
       description: "Adjust LED light color for therapy",
       icon: <Lightbulb className="h-5 w-5" />,
-      endpoint: "/ledcolors",
+      endpoint: "/led-color",
       historyEndpoint: "/led-history",
       hasColorPicker: true
     },
@@ -74,14 +74,14 @@ const Dashboard = () => {
       title: "Steam Generator",
       description: "Manage steam output and duration",
       icon: <CloudFog className="h-5 w-5" />,
-      endpoint: "/steams",
+      endpoint: "/steam",
       historyEndpoint: "/steam-history"
     },
     {
       title: "Nanoflicker",
       description: "Control nanoflicker frequency and intensity",
       icon: <Award className="h-5 w-5" />,
-      endpoint: "/nanoflickers",
+      endpoint: "/nano-flicker",
       historyEndpoint: "/nanoflicker-history"
     },
     {
@@ -89,14 +89,14 @@ const Dashboard = () => {
       description: "Adjust temperature levels for therapy",
       icon: <Thermometer className="h-5 w-5" />,
       hasSlider: true,
-      endpoint: "/temptanks",
+      endpoint: "/temp-tank",
       historyEndpoint: "/temperature-tank-history"
     },
     {
       title: "Water Pump",
       description: "Control water circulation system",
       icon: <Waves className="h-5 w-5" />,
-      endpoint: "/water-pumps",
+      endpoint: "/water-pump",
       historyEndpoint: "/water-pump-history"
     }
   ];
@@ -109,25 +109,43 @@ const Dashboard = () => {
       endpoint: "/biofeedback",
       icon: <Heart className="h-5 w-5" />,
       fields: [
-        { name: "heart_rate", label: "Heart Rate (BPM)" },
-        { name: "heart_rate_variability", label: "Heart Rate Variability (ms)" },
-        { name: "electromyography", label: "Electromyography (μV)" },
-        { name: "electrodermal_activity", label: "Electrodermal Activity (μS)" },
-        { name: "respiration_rate", label: "Respiration Rate (BPM)" }
-      ]
+  { name: "heart_rate", label: "Heart Rate (BPM)" },
+  { name: "heart_rate_variability", label: "Heart Rate Variability (ms)" },
+  { name: "electromyography", label: "Electromyography (μV)" },
+  { name: "electrodermal_activity", label: "Electrodermal Activity (μS)" },
+  { name: "respiration_rate", label: "Respiration Rate (BPM)" },
+  { name: "blood_pressure", label: "Blood Pressure (mmHg)" },
+  { name: "temperature", label: "Body Temperature (°C)" },
+  { name: "brainwave_activity", label: "Brainwave Activity (Hz)" },
+  { name: "oxygen_saturation", label: "Oxygen Saturation (%)" },
+  { name: "blood_glucose_levels", label: "Blood Glucose Levels (mg/dL)" },
+  { name: "galvanic_skin_response", label: "Galvanic Skin Response (μS)" }
+]
+
     },
     {
       title: "Burn Progress",
       description: "Document burn wound healing measurements",
       endpoint: "/burn-progress",
       icon: <Flame className="h-5 w-5" />,
-      fields: [
-        { name: "wound_size", label: "Wound Size (cm²)" },
-        { name: "epithelialization", label: "Epithelialization (%)" },
-        { name: "exudate_amount", label: "Exudate Amount (ml)" },
-        { name: "pain_level", label: "Pain Level (0-10)" },
-        { name: "swelling", label: "Swelling (0-10)" }
-      ]
+     fields: [
+  { name: "wound_size_depth", label: "Wound Depth (cm)" },
+  { name: "epithelialization", label: "Epithelialization (%)" },
+  { name: "exudate_amount_type", label: "Exudate Type (Score 0–5)" },
+  { name: "infection_indicators", label: "Infection Indicators (Score 0–10)" },
+  { name: "granulation_tissue", label: "Granulation Tissue (%)" },
+  { name: "pain_levels", label: "Pain Levels (General Score 0–10)" },
+  { name: "swelling", label: "Swelling (0–10)" },
+  { name: "swelling_edema", label: "Swelling/Edema (0–10)" },
+  { name: "scarring", label: "Scarring (Severity Score 0–10)" },
+  { name: "functional_recovery", label: "Functional Recovery (%)" },
+  { name: "color_changes", label: "Color Changes (Score 0–10)" },
+  { name: "temperature_wound_site", label: "Wound Site Temperature (°C)" },
+  { name: "blood_flow_perfusion", label: "Blood Flow/Perfusion (ml/min)" },
+  { name: "nutritional_status", label: "Nutritional Status (Score 0–10)" },
+  { name: "systemic_indicators", label: "Systemic Indicators (Score 0–10)" }
+]
+
     },
     {
       title: "Brain Monitoring",
@@ -139,7 +157,12 @@ const Dashboard = () => {
         { name: "theta_waves", label: "Theta Waves (Hz)" },
         { name: "beta_waves", label: "Beta Waves (Hz)" },
         { name: "gamma_waves", label: "Gamma Waves (Hz)" },
-        { name: "heart_rate", label: "Heart Rate (BPM)" }
+        { name: "heart_rate", label: "Heart Rate (BPM)" },
+        { name: "heart_rate_variability", label: "Heart Rate Variability (ms)" },
+        { name: "electromyography", label: "Electromyography (μV)" },
+        { name: "respiration_rate", label: "Respiration Rate (BPM)" },
+        { name: "electrodermal_activity", label: "Electrodermal Activity (μS)" },
+        { name: "peripheral_skin_temperature", label: "Peripheral Skin Temperature (°C)" }
       ]
     },
     {
@@ -152,7 +175,11 @@ const Dashboard = () => {
         { name: "alpha_waves", label: "Alpha Waves (Hz)" },
         { name: "respiratory_sinus_arrhythmia", label: "RSA (ms)" },
         { name: "coherence_ratio", label: "Coherence Ratio" },
-        { name: "brainwave_coherence", label: "Brainwave Coherence (%)" }
+        { name: "brainwave_coherence", label: "Brainwave Coherence (%)" },
+        { name: "blood_pressure_variability", label: "Blood Pressure Variability (mmHg)" },
+        { name: "electrodermal_activity", label: "Electrodermal Activity (μS)" },
+        { name: "breathing_patterns", label: "Breathing Patterns (Score or BPM)" },
+        { name: "subjective_measures", label: "Subjective Measures (Self-Reported Score)" }
       ]
     }
   ];
