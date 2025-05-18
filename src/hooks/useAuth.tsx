@@ -7,14 +7,16 @@ import React, {
   useEffect,
   ReactNode,
 } from "react";
-import { useNavigate, useLocation, Navigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 
 // Environment variable for API base URL
 const API_URL = import.meta.env.VITE_API_URL;
 
+// Our User shape now includes `role` and a non-optional `isAdmin`
 export type User = {
   id: number;
+  role: string;
   full_name: string;
   email: string;
   gender: string;
@@ -25,11 +27,11 @@ export type User = {
   country: string;
   occupation?: string;
   marital_status?: string;
-  sleep_hours?: string;
+  sleep_hours?: number;
   exercise_frequency?: string;
-  smoking_status?: boolean;
-  alcohol_consumption?: boolean;
-  isAdmin?: boolean;
+  smoking_status?: string;
+  alcohol_consumption?: string;
+  isAdmin: boolean;
 };
 
 export interface SignupData {
@@ -44,10 +46,10 @@ export interface SignupData {
   country: string;
   occupation: string;
   marital_status: string;
-  sleep_hours: string;
+  sleep_hours: number;
   exercise_frequency: string;
-  smoking_status: boolean;
-  alcohol_consumption: boolean;
+  smoking_status: string;
+  alcohol_consumption: string;
 }
 
 interface AuthContextType {
@@ -57,6 +59,7 @@ interface AuthContextType {
   loading: boolean;
   signup: (data: SignupData) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
+  adminLogin: (email: string, password: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -69,7 +72,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // On mount, load token from localStorage & fetch current user
+  // On mount, load token & fetch user
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
     if (storedToken) {
@@ -87,7 +90,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         logout();
         return;
       }
-      const me: User = await res.json();
+
+      const raw = await res.json();   // raw.role === "Admin" or "User", etc.
+      const me: User = {
+        ...raw,
+        isAdmin: raw.role === "Admin", // ← derive the flag
+      };
       setUser(me);
     } catch (err) {
       console.error("Fetch user failed:", err);
@@ -130,15 +138,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: form.toString(),
       });
-
       if (!res.ok) throw new Error("Invalid credentials");
 
       const { access_token } = await res.json();
       localStorage.setItem("token", access_token);
       setToken(access_token);
       await fetchUser(access_token);
+
       toast.success("Login successful!");
-      // Redirect back to where we came from, or dashboard
       const from = (location.state as any)?.from?.pathname || "/dashboard";
       navigate(from, { replace: true });
     } catch (error: any) {
@@ -150,8 +157,45 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const adminLogin = async (email: string, password: string) => {
+    setLoading(true);
+    try {
+      const form = new URLSearchParams();
+      form.append("username", email);
+      form.append("password", password);
+
+      const res = await fetch(`${API_URL}/auth/admin-login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: form.toString(),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.detail || "Admin login failed");
+      }
+
+      const { access_token, refresh_token } = await res.json();
+      localStorage.setItem("token", access_token);
+      localStorage.setItem("refresh_token", refresh_token);
+      setToken(access_token);
+
+      // re-use fetchUser → now sees role="Admin" and maps isAdmin=true
+      await fetchUser(access_token);
+
+      toast.success("Admin login successful!");
+      navigate("/admin/dashboard", { replace: true });
+    } catch (error: any) {
+      console.error("Admin login error:", error);
+      toast.error(error.message || "Admin login failed");
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("refresh_token");
     setToken(null);
     setUser(null);
     navigate("/login");
@@ -168,6 +212,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         loading,
         signup,
         login,
+        adminLogin,
         logout,
       }}
     >
@@ -200,12 +245,11 @@ export const RequireAuth = ({ children }: { children: ReactNode }) => {
       </div>
     );
   }
-
   return isAuthenticated ? <>{children}</> : null;
 };
 
 export const RequireAdmin = ({ children }: { children: ReactNode }) => {
-  const { user, loading, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, loading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -222,6 +266,5 @@ export const RequireAdmin = ({ children }: { children: ReactNode }) => {
       </div>
     );
   }
-
   return isAuthenticated && user?.isAdmin ? <>{children}</> : null;
 };
