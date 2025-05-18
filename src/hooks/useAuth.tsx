@@ -31,8 +31,15 @@ export type User = {
   exercise_frequency?: string;
   smoking_status?: string;
   alcohol_consumption?: string;
+  user_status: string;
   isAdmin: boolean;
 };
+
+export enum UserStatus {
+  Active = "Active",
+  Inactive = "Inactive",
+  Pending = "Pending"
+}
 
 export interface SignupData {
   full_name: string;
