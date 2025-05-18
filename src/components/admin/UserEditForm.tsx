@@ -63,43 +63,59 @@ const UserEditForm = ({ user, onSave, onCancel }: UserEditFormProps) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    // basic validation
-    if (!formData.fullName || !formData.email) {
-      toast.error("Name and email are required.");
-      return;
-    }
-    if (formData.password && formData.password.length < 6) {
-      toast.error("Password must be at least 6 characters.");
-      return;
-    }
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-    // Build payload; omit password if blank
-    const payload: Record<string, any> = { ...formData };
-    if (!payload.password) delete payload.password;
+  // validation (keep as is)
+  if (!formData.fullName || !formData.email) {
+    toast.error("Name and email are required.");
+    return;
+  }
+  if (formData.password && formData.password.length < 6) {
+    toast.error("Password must be at least 6 characters.");
+    return;
+  }
 
-    try {
-      const res = await fetch(`${API_URL}/users/${formData.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.detail || `HTTP ${res.status}`);
-      }
-      const updated = await res.json();
-      onSave(updated);
-      toast.success("User updated successfully");
-    } catch (err: any) {
-      console.error("Update failed:", err);
-      toast.error(err.message || "Failed to update user.");
+  // Build payload; convert status -> user_status, and add updated_by (from admin email)
+  const payload: Record<string, any> = { ...formData };
+
+  // Remap status to user_status
+  if ("status" in payload) {
+    payload.user_status = payload.status;
+    delete payload.status;
+  }
+
+  // Remove id from payload if present
+  delete payload.id;
+
+  // Add updated_by from admin (current user)
+  payload.updated_by = user.updated_by || "admin@example.com"; // fallback, or get from context
+
+  // Optional: Remove password if empty
+  if (!payload.password) delete payload.password;
+
+  try {
+    const res = await fetch(`${API_URL}/users/${user.id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.detail || `HTTP ${res.status}`);
     }
-  };
+    const updated = await res.json();
+    onSave(updated);
+    toast.success("User updated successfully");
+  } catch (err: any) {
+    console.error("Update failed:", err);
+    toast.error(err.message || "Failed to update user.");
+  }
+};
+
 
   return (
     <Dialog open={true} onOpenChange={onCancel}>
