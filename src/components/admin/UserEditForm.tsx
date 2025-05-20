@@ -29,27 +29,27 @@ interface UserEditFormProps {
 }
 
 const UserEditForm = ({ user, onSave, onCancel }: UserEditFormProps) => {
-  const { token } = useAuth();
+  const { token, user: adminUser } = useAuth(); // <-- Hook called here at component top-level
   const API_URL = import.meta.env.VITE_API_URL;
 
   const [formData, setFormData] = useState({
     id: user.id,
-    fullName:          user.fullName || "",
-    email:             user.email || "",
-    password:          "",                // leave blank if unchanged
-    gender:            user.gender || "",
-    dob:               user.dob || "",
-    nationality:       user.nationality || "",
-    phone:             user.phone || "",
-    city:              user.city || "",
-    country:           user.country || "",
-    occupation:        user.occupation || "",
-    marital_status:    user.marital_status || "",
-    sleep_hours:       user.sleep_hours || "",
-    exercise_frequency:user.exercise_frequency || "",
-    smoking_status:    user.smoking_status || "",
+    full_name: user.full_name || "",
+    email: user.email || "",
+    password: "", // leave blank if unchanged
+    gender: user.gender || "",
+    dob: user.dob || "",
+    nationality: user.nationality || "",
+    phone: user.phone || "",
+    city: user.city || "",
+    country: user.country || "",
+    occupation: user.occupation || "",
+    marital_status: user.marital_status || "",
+    sleep_hours: user.sleep_hours || "",
+    exercise_frequency: user.exercise_frequency || "",
+    smoking_status: user.smoking_status || "",
     alcohol_consumption: user.alcohol_consumption || "",
-    status:            (user.status as "Active" | "Inactive" | "Pending") || "Active",
+    user_status: user.user_status || "Active",
   });
 
   const handleInputChange = (
@@ -63,79 +63,70 @@ const UserEditForm = ({ user, onSave, onCancel }: UserEditFormProps) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  // validation (keep as is)
-  if (!formData.fullName || !formData.email) {
-    toast.error("Name and email are required.");
-    return;
-  }
-  if (formData.password && formData.password.length < 6) {
-    toast.error("Password must be at least 6 characters.");
-    return;
-  }
-
-  // Build payload; convert status -> user_status, and add updated_by (from admin email)
-  const payload: Record<string, any> = { ...formData };
-
-  // Remap status to user_status
-  if ("status" in payload) {
-    payload.user_status = payload.status;
-    delete payload.status;
-  }
-
-  // Remove id from payload if present
-  delete payload.id;
-
-  // Add updated_by from admin (current user)
-  payload.updated_by = user.updated_by || "admin@example.com"; // fallback, or get from context
-
-  // Optional: Remove password if empty
-  if (!payload.password) delete payload.password;
-
-  try {
-    const res = await fetch(`${API_URL}/users/${user.id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(payload),
-    });
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.detail || `HTTP ${res.status}`);
+    // validation
+    if (!formData.full_name || !formData.email) {
+      toast.error("Name and email are required.");
+      return;
     }
-    const updated = await res.json();
-    onSave(updated);
-    toast.success("User updated successfully");
-  } catch (err: any) {
-    console.error("Update failed:", err);
-    toast.error(err.message || "Failed to update user.");
-  }
-};
+    if (formData.password && formData.password.length < 6) {
+      toast.error("Password must be at least 6 characters.");
+      return;
+    }
 
+    // Build payload
+    const payload: Record<string, any> = { ...formData };
+    delete payload.id;
+    payload.updated_by = adminUser?.email || "admin@example.com"; // use adminUser from top-level hook
+
+    if (!payload.password) delete payload.password;
+
+    try {
+      const res = await fetch(`${API_URL}/users/${user.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.detail || `HTTP ${res.status}`);
+      }
+
+      const updated = await res.json();
+      onSave(updated);
+      toast.success("User updated successfully");
+    } catch (err: any) {
+      console.error("Update failed:", err);
+      toast.error(err.message || "Failed to update user.");
+    }
+  };
 
   return (
     <Dialog open={true} onOpenChange={onCancel}>
       <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Edit User: {user.fullName}</DialogTitle>
+          <DialogTitle>Edit User: {user.full_name}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6 py-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Full Name */}
             <div className="space-y-1">
-              <Label htmlFor="fullName">Full Name</Label>
+              <Label htmlFor="full_name">Full Name</Label>
               <Input
-                id="fullName"
-                name="fullName"
-                value={formData.fullName}
+                id="full_name"
+                name="full_name"
+                value={formData.full_name}
                 onChange={handleInputChange}
               />
             </div>
+
             {/* Email */}
             <div className="space-y-1">
               <Label htmlFor="email">Email</Label>
@@ -147,6 +138,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                 onChange={handleInputChange}
               />
             </div>
+
             {/* Password */}
             <div className="space-y-1">
               <Label htmlFor="password">Password</Label>
@@ -162,6 +154,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                 Leave blank to keep existing password
               </p>
             </div>
+
             {/* Gender */}
             <div className="space-y-1">
               <Label htmlFor="gender">Gender</Label>
@@ -179,6 +172,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                 </SelectContent>
               </Select>
             </div>
+
             {/* Date of Birth */}
             <div className="space-y-1">
               <Label htmlFor="dob">Date of Birth</Label>
@@ -190,6 +184,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                 onChange={handleInputChange}
               />
             </div>
+
             {/* Nationality */}
             <div className="space-y-1">
               <Label htmlFor="nationality">Nationality</Label>
@@ -200,6 +195,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                 onChange={handleInputChange}
               />
             </div>
+
             {/* Phone */}
             <div className="space-y-1">
               <Label htmlFor="phone">Phone</Label>
@@ -210,6 +206,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                 onChange={handleInputChange}
               />
             </div>
+
             {/* City */}
             <div className="space-y-1">
               <Label htmlFor="city">City</Label>
@@ -220,6 +217,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                 onChange={handleInputChange}
               />
             </div>
+
             {/* Country */}
             <div className="space-y-1">
               <Label htmlFor="country">Country</Label>
@@ -230,6 +228,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                 onChange={handleInputChange}
               />
             </div>
+
             {/* Occupation */}
             <div className="space-y-1">
               <Label htmlFor="occupation">Occupation</Label>
@@ -240,6 +239,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                 onChange={handleInputChange}
               />
             </div>
+
             {/* Marital Status */}
             <div className="space-y-1">
               <Label htmlFor="marital_status">Marital Status</Label>
@@ -250,6 +250,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                 onChange={handleInputChange}
               />
             </div>
+
             {/* Sleep Hours */}
             <div className="space-y-1">
               <Label htmlFor="sleep_hours">Sleep Hours</Label>
@@ -260,6 +261,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                 onChange={handleInputChange}
               />
             </div>
+
             {/* Exercise Frequency */}
             <div className="space-y-1">
               <Label htmlFor="exercise_frequency">Exercise Frequency</Label>
@@ -270,6 +272,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                 onChange={handleInputChange}
               />
             </div>
+
             {/* Smoking Status */}
             <div className="space-y-1">
               <Label htmlFor="smoking_status">Smoking Status</Label>
@@ -280,6 +283,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                 onChange={handleInputChange}
               />
             </div>
+
             {/* Alcohol Consumption */}
             <div className="space-y-1">
               <Label htmlFor="alcohol_consumption">Alcohol Consumption</Label>
@@ -294,12 +298,12 @@ const handleSubmit = async (e: React.FormEvent) => {
 
           {/* Status Select */}
           <div className="flex items-center space-x-2">
-            <Label htmlFor="status">Status</Label>
+            <Label htmlFor="user_status">Status</Label>
             <Select
-              value={formData.status}
-              onValueChange={(v) => handleSelectChange("status", v)}
+              value={formData.user_status}
+              onValueChange={(v) => handleSelectChange("user_status", v)}
             >
-              <SelectTrigger id="status" className="w-[120px]">
+              <SelectTrigger id="user_status" className="w-[120px]">
                 <SelectValue placeholder="Select status" />
               </SelectTrigger>
               <SelectContent>

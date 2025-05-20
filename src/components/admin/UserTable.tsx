@@ -15,23 +15,16 @@ import {
 import UserDeviceHistory from "./UserDeviceHistory";
 import UserEditForm from "./UserEditForm";
 import UserDataHistory from "./UserDataHistory";
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 
 export interface UserOut {
   id: string;
-  fullName: string;
   email: string;
+  full_name: string; // Changed from fullName to match API response
   country: string;
   occupation: string;
-  status: "Active" | "Inactive" | "Pending";
+  user_status: "Active" | "Inactive" | "Pending"; // Changed from status to user_status to match API response
   // …other personal fields…
 }
 
@@ -42,7 +35,7 @@ const deviceControls = [
   { title: "Nanoflicker",        endpoint: "/nanoflicker-history",      status: Math.random() > 0.5 },
   { title: "Temperature Tank",   endpoint: "/temperature-tank-history", temperature: Math.floor(Math.random()*30)+60 },
   { title: "Water Pump",         endpoint: "/water-pump-history",        status: Math.random() > 0.5 },
-]; // :contentReference[oaicite:0]{index=0}:contentReference[oaicite:1]{index=1}
+];
 
 const dataForms = [
   {
@@ -89,7 +82,7 @@ const dataForms = [
       { name: "brainwave_coherence",          label: "Brainwave Coherence (%)" },
     ],
   },
-]; // :contentReference[oaicite:2]{index=2}:contentReference[oaicite:3]{index=3}
+];
 
 const UserTable = () => {
   const [users, setUsers] = useState<UserOut[]>([]);
@@ -116,35 +109,6 @@ const UserTable = () => {
 
   const { user } = useAuth();
   const adminEmail=user?.email;
-  // Update status via dropdown
-  const handleUpdateUserStatus = async (
-    userId: string,
-    newStatus: "Active" | "Inactive" | "Pending"
-  ) => {
-    // Optimistic UI
-    setUsers((prev) =>
-      prev.map((u) => (u.id === userId ? { ...u, status: newStatus } : u))
-    );
-    try {
-      const res = await fetch(`${API_URL}/users/${userId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ user_status: newStatus, updated_by:adminEmail }),
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      toast.success(`Status set to ${newStatus}`);
-    } catch (e) {
-      console.error("Status update failed:", e);
-      toast.error("Could not update status");
-      // Revert
-      setUsers((prev) =>
-        prev.map((u) => (u.id === userId ? { ...u, status: u.status } : u))
-      );
-    }
-  }; // :contentReference[oaicite:4]{index=4}:contentReference[oaicite:5]{index=5}
 
   const handleViewUser = (user: UserOut) => setSelectedUser(user);
   const handleCloseUserModal = () => setSelectedUser(null);
@@ -190,26 +154,18 @@ const UserTable = () => {
           <TableBody>
             {users.map((user) => (
               <TableRow key={user.id}>
-                <TableCell className="font-medium">{user.fullName}</TableCell>
+                <TableCell className="font-medium">{user.full_name}</TableCell>
                 <TableCell>{user.email}</TableCell>
                 <TableCell>{user.country}</TableCell>
                 <TableCell>{user.occupation}</TableCell>
                 <TableCell>
-                  <Select
-                    value={user.status}
-                    onValueChange={(val) =>
-                      handleUpdateUserStatus(user.id, val as any)
-                    }
-                  >
-                    <SelectTrigger className="w-[120px]">
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Active">Active</SelectItem>
-                      <SelectItem value="Inactive">Inactive</SelectItem>
-                      <SelectItem value="Pending">Pending</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    user.user_status === "Active" ? "bg-green-100 text-green-800" :
+                    user.user_status === "Inactive" ? "bg-gray-100 text-gray-800" :
+                    "bg-yellow-100 text-yellow-800"
+                  }`}>
+                    {user.user_status}
+                  </span>
                 </TableCell>
                 <TableCell>
                   <div className="flex space-x-2">
@@ -240,7 +196,7 @@ const UserTable = () => {
         <Dialog open={!!selectedUser} onOpenChange={handleCloseUserModal}>
           <DialogContent className="sm:max-w-4xl">
             <DialogHeader>
-              <DialogTitle>{selectedUser.fullName}</DialogTitle>
+              <DialogTitle>{selectedUser.full_name}</DialogTitle>
             </DialogHeader>
 
             {/* Toggle between device cards and form cards */}
@@ -251,7 +207,7 @@ const UserTable = () => {
                 title={viewingDevice.name}
                 endpoint={viewingDevice.endpoint}
                 userId={selectedUser.id}
-                userName={selectedUser.fullName}
+                userName={selectedUser.full_name}
               />
             ) : (
               <div className="space-y-4">
@@ -272,7 +228,7 @@ const UserTable = () => {
                           handleViewUserFormData(
                             form.title,
                             selectedUser.id,
-                            selectedUser.fullName
+                            selectedUser.full_name
                           )
                         }
                       >

@@ -5,6 +5,30 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect, useState } from "react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 // LiveSession type based on backend schema
 interface LiveSession {
@@ -17,6 +41,7 @@ interface LiveSession {
   youtube_link: string | null;
   created_at: string;
   updated_at: string | null;
+  livestatus: boolean; // Added the new livestatus field
 }
 
 // Create and Update payload types based on backend schema
@@ -27,6 +52,7 @@ interface LiveSessionPayload {
   date_time: string;
   duration_minutes: number;
   youtube_link: string | null;
+  livestatus: boolean; // Added the new livestatus field
 }
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -36,25 +62,14 @@ const LiveSessionManager = () => {
   const [liveSession, setLiveSession] = useState<LiveSession | null>(null);
   const [allSessions, setAllSessions] = useState<LiveSession[]>([]);
   const [isEditing, setIsEditing] = useState(false);
-  const [isActive, setIsActive] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [dateFilter, setDateFilter] = useState<string>("");
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   
   // Fetch live session data on component mount
   useEffect(() => {
     fetchAllLiveSessions();
   }, []);
-  
-  // Check if session is active whenever selected session changes
-  useEffect(() => {
-    if (liveSession) {
-      // Determine if session is active (in the future and within 15 minutes of starting)
-      const sessionTime = new Date(liveSession.date_time);
-      const now = new Date();
-      const timeDiff = sessionTime.getTime() - now.getTime();
-      setIsActive(timeDiff > 0 && timeDiff < 15 * 60 * 1000);
-    }
-  }, [liveSession]);
 
   const fetchAllLiveSessions = async () => {
     setIsLoading(true);
@@ -73,7 +88,7 @@ const LiveSessionManager = () => {
       
       // Sort by date_time to display upcoming sessions first
       const sortedSessions = [...data].sort((a, b) => 
-        new Date(a.date_time).getTime() - new Date(b.date_time).getTime()
+        new Date(b.date_time).getTime() - new Date(a.date_time).getTime()
       );
       
       setAllSessions(sortedSessions);
@@ -88,7 +103,7 @@ const LiveSessionManager = () => {
           setLiveSession(upcomingSessions[0]);
         } else {
           // If no upcoming sessions, select the most recent past one
-          setLiveSession(sortedSessions[sortedSessions.length - 1]);
+          setLiveSession(sortedSessions[0]);
         }
       } else {
         // Create an empty session object if none exists
@@ -117,7 +132,8 @@ const LiveSessionManager = () => {
       duration_minutes: 60,
       youtube_link: "",
       created_at: new Date().toISOString(),
-      updated_at: null
+      updated_at: null,
+      livestatus: false // Initialize with livestatus off
     });
     
     // Automatically enter edit mode when creating a new session
@@ -155,7 +171,8 @@ const LiveSessionManager = () => {
         description: liveSession.description,
         date_time: liveSession.date_time,
         duration_minutes: liveSession.duration_minutes,
-        youtube_link: liveSession.youtube_link
+        youtube_link: liveSession.youtube_link,
+        livestatus: liveSession.livestatus
       };
 
       const response = await fetch(`${API_URL}/admin/live-session/`, {
@@ -176,7 +193,7 @@ const LiveSessionManager = () => {
       
       // Add to all sessions list
       setAllSessions(prev => [...prev, newSession].sort((a, b) => 
-        new Date(a.date_time).getTime() - new Date(b.date_time).getTime()
+        new Date(b.date_time).getTime() - new Date(a.date_time).getTime()
       ));
       
       toast.success("Live session created successfully!");
@@ -196,7 +213,8 @@ const LiveSessionManager = () => {
         description: liveSession.description,
         date_time: liveSession.date_time,
         duration_minutes: liveSession.duration_minutes,
-        youtube_link: liveSession.youtube_link
+        youtube_link: liveSession.youtube_link,
+        livestatus: liveSession.livestatus
       };
 
       const response = await fetch(`${API_URL}/admin/live-session/${liveSession.id}`, {
@@ -219,13 +237,47 @@ const LiveSessionManager = () => {
       setAllSessions(prev => prev.map(s => 
         s.id === updatedSession.id ? updatedSession : s
       ).sort((a, b) => 
-        new Date(a.date_time).getTime() - new Date(b.date_time).getTime()
+        new Date(b.date_time).getTime() - new Date(a.date_time).getTime()
       ));
       
       toast.success("Live session updated successfully!");
     } catch (error) {
       console.error("Error updating live session:", error);
       toast.error("Failed to update live session");
+    }
+  };
+
+  const toggleLiveStatus = async (sessionId: string, newStatus: boolean) => {
+    try {
+      const response = await fetch(`${API_URL}/admin/live-session/${sessionId}/livestatus`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ livestatus: newStatus }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update live status');
+      }
+
+      const updatedSession = await response.json();
+      
+      // Update in all sessions list
+      setAllSessions(prev => prev.map(s => 
+        s.id === sessionId ? updatedSession : s
+      ));
+      
+      // Update current session if it's the one being modified
+      if (liveSession?.id === sessionId) {
+        setLiveSession(updatedSession);
+      }
+      
+      toast.success(`Live status ${newStatus ? 'activated' : 'deactivated'} successfully!`);
+    } catch (error) {
+      console.error("Error updating live status:", error);
+      toast.error("Failed to update live status");
     }
   };
 
@@ -255,6 +307,7 @@ const LiveSessionManager = () => {
         }
       }
       
+      setDeleteConfirmId(null);
       toast.success("Live session deleted successfully!");
     } catch (error) {
       console.error("Error deleting live session:", error);
@@ -271,12 +324,14 @@ const LiveSessionManager = () => {
     setIsEditing(false);
   };
 
-  const handleStatusToggle = (checked: boolean) => {
-    setIsActive(checked);
-    toast.success(checked
-      ? "Live session is now active! Users will be notified."
-      : "Live session has been deactivated."
-    );
+  const handleLiveStatusToggle = (checked: boolean) => {
+    if (liveSession?.id) {
+      // Update just the live status using the PATCH endpoint
+      toggleLiveStatus(liveSession.id, checked);
+    } else {
+      // For new sessions, just update the local state
+      handleInputChange('livestatus', checked);
+    }
   };
 
   const handleTestYouTubeLink = () => {
@@ -360,6 +415,8 @@ const LiveSessionManager = () => {
           </div>
         )}
       </div>
+      
+      {/* Selected Session Details Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 bg-white rounded-lg shadow p-6">
           <div className="space-y-4">
@@ -367,9 +424,9 @@ const LiveSessionManager = () => {
               <h3 className="text-lg font-semibold">Session Information</h3>
               {!isEditing && (
                 <div className="flex items-center space-x-2">
-                  <div className={`h-3 w-3 rounded-full ${isActive ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                  <span className={`text-sm font-medium ${isActive ? 'text-green-600' : 'text-gray-500'}`}>
-                    {isActive ? 'Active' : 'Inactive'}
+                  <div className={`h-3 w-3 rounded-full ${liveSession.livestatus ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                  <span className={`text-sm font-medium ${liveSession.livestatus ? 'text-green-600' : 'text-gray-500'}`}>
+                    {liveSession.livestatus ? 'Active' : 'Inactive'}
                   </span>
                 </div>
               )}
@@ -431,6 +488,14 @@ const LiveSessionManager = () => {
                     placeholder="https://youtube.com/watch?v=..."
                   />
                 </div>
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="edit-livestatus"
+                    checked={liveSession.livestatus}
+                    onCheckedChange={(checked) => handleInputChange('livestatus', checked)}
+                  />
+                  <Label htmlFor="edit-livestatus">Live Status</Label>
+                </div>
               </div>
             ) : (
               <div className="space-y-4">
@@ -480,8 +545,9 @@ const LiveSessionManager = () => {
                 <Label htmlFor="session-status" className="text-base">Live Status</Label>
                 <Switch
                   id="session-status"
-                  checked={isActive}
-                  onCheckedChange={handleStatusToggle}
+                  checked={liveSession.livestatus}
+                  onCheckedChange={handleLiveStatusToggle}
+                  disabled={!liveSession.id} // Disable for new sessions
                 />
               </div>
               <p className="mt-2 text-sm text-gray-500">
@@ -492,14 +558,14 @@ const LiveSessionManager = () => {
               <h4 className="font-medium text-gray-700 mb-2">Session Preview</h4>
               <div
                 className={`flex items-center gap-2 px-3 py-2 rounded-md ${
-                  isActive
+                  liveSession.livestatus
                     ? 'bg-green-100 text-green-800 border border-green-200'
                     : 'bg-gray-100 text-gray-600 border border-gray-200'
                 }`}
               >
-                <div className={`h-3 w-3 rounded-full ${isActive ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                <div className={`h-3 w-3 rounded-full ${liveSession.livestatus ? 'bg-green-500' : 'bg-gray-400'}`}></div>
                 <span>
-                  {isActive
+                  {liveSession.livestatus
                     ? 'Live Now: ' + liveSession.session_title
                     : `Coming soon: ${new Date(liveSession.date_time).toLocaleDateString()}`
                   }
@@ -534,6 +600,121 @@ const LiveSessionManager = () => {
           </div>
         </div>
       </div>
+      
+      {/* Sessions List Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle>All Live Sessions</CardTitle>
+          <CardDescription>Manage all your live sessions in one place</CardDescription>
+          <div className="flex items-center space-x-2 mt-2">
+            <Label htmlFor="date-filter" className="min-w-[80px]">Filter by date:</Label>
+            <Input
+              id="date-filter"
+              type="date"
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
+              className="max-w-xs"
+            />
+            {dateFilter && (
+              <Button variant="ghost" size="sm" onClick={() => setDateFilter("")}>
+                Clear
+              </Button>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Title</TableHead>
+                  <TableHead>Host</TableHead>
+                  <TableHead>Date & Time</TableHead>
+                  <TableHead>Duration</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {getFilteredSessions().length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-4">
+                      No sessions found
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  getFilteredSessions().map((session) => (
+                    <TableRow key={session.id}>
+                      <TableCell className="font-medium">{session.session_title}</TableCell>
+                      <TableCell>{session.host}</TableCell>
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span>{formatSessionDate(session.date_time)}</span>
+                          <span className="text-xs text-gray-500">{formatSessionTime(session.date_time)}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>{session.duration_minutes} mins</TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-2">
+                          <div className={`h-2 w-2 rounded-full ${session.livestatus ? 'bg-green-500' : isSessionUpcoming(session.date_time) ? 'bg-yellow-500' : 'bg-gray-400'}`}></div>
+                          <span className="text-sm">
+                            {session.livestatus 
+                              ? 'Live'
+                              : isSessionUpcoming(session.date_time) ? 'Upcoming' : 'Ended'}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => selectSession(session)}
+                          >
+                            Select
+                          </Button>
+                          {isSessionUpcoming(session.date_time) ? (
+  <Switch
+    checked={session.livestatus}
+    onCheckedChange={(checked) => toggleLiveStatus(session.id, checked)}
+    className="mr-2"
+  />
+) : (
+  <div className="w-9 mr-2"></div> // Empty placeholder to maintain alignment
+)}
+                          <Dialog open={deleteConfirmId === session.id} onOpenChange={(open) => !open && setDeleteConfirmId(null)}>
+                            <DialogTrigger asChild>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => setDeleteConfirmId(session.id)}
+                              >
+                                Delete
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Confirm Deletion</DialogTitle>
+                                <DialogDescription>
+                                  Are you sure you want to delete the session "{session.session_title}"? This action cannot be undone.
+                                </DialogDescription>
+                              </DialogHeader>
+                              <DialogFooter>
+                                <Button variant="outline" onClick={() => setDeleteConfirmId(null)}>Cancel</Button>
+                                <Button variant="destructive" onClick={() => deleteSession(session.id)}>Delete</Button>
+                              </DialogFooter>
+                            </DialogContent>
+                          </Dialog>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
