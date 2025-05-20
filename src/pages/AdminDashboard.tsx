@@ -6,10 +6,12 @@ import AboutEditor from "@/components/admin/AboutEditor";
 import NewsManager from "@/components/admin/NewsManager";
 import ContactEditor from "@/components/admin/ContactEditor";
 import LiveSessionManager from "@/components/admin/LiveSessionManager";
+import { useAuth } from "@/hooks/useAuth";
 
 const AdminDashboard = () => {
   const [activeSection, setActiveSection] = useState("dashboard");
 
+  
   // Function to render the active section
   const renderSection = () => {
     switch (activeSection) {
