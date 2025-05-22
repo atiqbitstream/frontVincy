@@ -1,11 +1,11 @@
 // src/components/Navbar.tsx
-
 import { Link } from "react-router-dom";
 import { LogOut, Menu, X, Sun, Moon, Video } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { useTheme } from "../hooks/useTheme";
 import { toast } from "sonner";
+import liveSessionService, { LiveSession } from "../services/LiveSessionService";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -15,10 +15,12 @@ const Navbar = () => {
     isLive: boolean;
     timeRemaining: string | null;
     label: string;
+    sessionId: string | null;
   }>({
     isLive: false,
     timeRemaining: null,
     label: "",
+    sessionId: null,
   });
 
   // Toggle mobile menu
@@ -33,45 +35,89 @@ const Navbar = () => {
     toast.success(`${next.charAt(0).toUpperCase() + next.slice(1)} mode activated`);
   };
 
-  // Mock live session check (replace with real API call as needed)
+  // Fetch live session data
   useEffect(() => {
-    const mock = {
-      status: false,
-      dateTime: new Date(Date.now() + 86400000).toISOString(),
-      label: "Introduction to Mind-Body Wellness",
+    let intervalId: number;
+    
+    const fetchLiveSessionData = async () => {
+      try {
+        const session = await liveSessionService.getCurrentLiveSession();
+        
+        if (!session) {
+          setLiveStatus({
+            isLive: false,
+            timeRemaining: null,
+            label: "",
+            sessionId: null
+          });
+          return;
+        }
+        
+        updateLiveStatus(session);
+      } catch (error) {
+        console.error("Error fetching live session data:", error);
+      }
     };
 
-    const update = () => {
-      const now = new Date();
-      const sessionTime = new Date(mock.dateTime);
-
-      if (mock.status) {
-        setLiveStatus({ isLive: true, timeRemaining: null, label: mock.label });
-        return;
+    // Update live status based on session data
+    const updateLiveStatus = (session: LiveSession) => {
+      if (session.livestatus) {
+        setLiveStatus({
+          isLive: true,
+          timeRemaining: null,
+          label: session.session_title,
+          sessionId: session.id
+        });
+      } else {
+        const timeRemaining = liveSessionService.getTimeRemaining(session.date_time);
+        setLiveStatus({
+          isLive: false,
+          timeRemaining,
+          label: session.session_title,
+          sessionId: session.id
+        });
       }
-
-      if (now >= sessionTime) {
-        setLiveStatus({ isLive: false, timeRemaining: null, label: mock.label });
-        return;
-      }
-
-      const diff = sessionTime.getTime() - now.getTime();
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-
-      let str = "";
-      if (days) str += `${days}d `;
-      if (hours || days) str += `${hours}h `;
-      str += `${minutes}m`;
-
-      setLiveStatus({ isLive: false, timeRemaining: str, label: mock.label });
     };
 
-    update();
-    const id = setInterval(update, 60000);
-    return () => clearInterval(id);
+    // Initial fetch
+    fetchLiveSessionData();
+    
+    // Set up polling - check every minute
+    intervalId = window.setInterval(fetchLiveSessionData, 60000);
+    
+    return () => {
+      clearInterval(intervalId);
+    };
   }, []);
+
+  // Update time remaining countdown
+  useEffect(() => {
+    if (!liveStatus.sessionId || liveStatus.isLive) return;
+    
+    const updateTimeRemaining = async () => {
+      try {
+        const session = await liveSessionService.getCurrentLiveSession();
+        if (session) {
+          const timeRemaining = liveSessionService.getTimeRemaining(session.date_time);
+          
+          setLiveStatus(prev => ({
+            ...prev,
+            timeRemaining,
+            isLive: session.livestatus
+          }));
+        }
+      } catch (error) {
+        console.error("Error updating time remaining:", error);
+      }
+    };
+    
+    // Update every second for the countdown
+    const countdownId = window.setInterval(updateTimeRemaining, 1000);
+    
+    return () => {
+      clearInterval(countdownId);
+    };
+  }, [liveStatus.sessionId, liveStatus.isLive]);
 
   return (
     <nav className="bg-card shadow-md border-b border-border">
@@ -86,7 +132,6 @@ const Navbar = () => {
               Wellness Optimal Mind Body
             </span>
           </div>
-
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-6">
             <Link
@@ -113,9 +158,8 @@ const Navbar = () => {
             >
               Contact Us
             </Link>
-
             <Link
-              to="/live-session"
+              to={liveStatus.isLive ? "/live-session" : liveStatus.timeRemaining ? "/live-session" : "/live-session"}
               className={`px-3 py-2 rounded-md text-sm font-medium flex items-center ${
                 liveStatus.isLive
                   ? "text-green-500 font-semibold"
@@ -133,7 +177,6 @@ const Navbar = () => {
                 <>Live Session</>
               )}
             </Link>
-
             <button
               onClick={toggleTheme}
               className="p-2 rounded-full hover:bg-muted/50"
@@ -145,7 +188,6 @@ const Navbar = () => {
                 <Moon size={20} className="text-blue-700" />
               )}
             </button>
-
             {isAuthenticated ? (
               <button
                 onClick={logout}
@@ -163,7 +205,6 @@ const Navbar = () => {
               </Link>
             )}
           </div>
-
           {/* Mobile Toggle */}
           <div className="md:hidden flex items-center space-x-2">
             <button
@@ -186,7 +227,6 @@ const Navbar = () => {
           </div>
         </div>
       </div>
-
       {/* Mobile Menu */}
       {isOpen && (
         <div className="md:hidden animate-fade-in bg-card border-t border-border">
@@ -239,7 +279,6 @@ const Navbar = () => {
                 <>Live Session</>
               )}
             </Link>
-
             {isAuthenticated ? (
               <button
                 onClick={() => {
