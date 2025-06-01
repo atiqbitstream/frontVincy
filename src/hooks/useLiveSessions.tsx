@@ -26,7 +26,7 @@ interface FormattedPastSession {
 }
 
 export function useLiveSession() {
-  const { token } = useAuth();
+  const { token, isAuthenticated } = useAuth(); // Add isAuthenticated check
   const liveSessionService = useLiveSessionService();
   
   const [state, setState] = useState<LiveSessionState>({
@@ -105,6 +105,8 @@ export function useLiveSession() {
 
   // Main polling effect - runs once on mount, then every 30 seconds
   useEffect(() => {
+    if (!isAuthenticated || !token) return; // Add early return if not authenticated
+    
     console.log('Setting up live session polling...');
     
     // Initial fetch
@@ -112,7 +114,6 @@ export function useLiveSession() {
     
     // Set up polling interval
     const interval = setInterval(() => {
-      console.log('Polling for live session updates...');
       fetchLiveSessionData();
     }, 30000); // 30 seconds
     
@@ -121,7 +122,7 @@ export function useLiveSession() {
       console.log('Cleaning up live session polling');
       clearInterval(interval);
     };
-  }, [token]); // Only re-run if token changes
+  }, [token, isAuthenticated]); // Add isAuthenticated to dependencies
 
   // Countdown effect - updates time remaining every second for upcoming sessions
   useEffect(() => {

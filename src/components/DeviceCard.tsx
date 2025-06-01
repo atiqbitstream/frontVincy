@@ -25,6 +25,8 @@ interface DeviceCardProps {
   endpoint: string;
   historyEndpoint: string;
   onViewHistory: (title: string, endpoint: string) => void;
+  initialState?: any; // The initial value from the latest API call
+  isLoadingInitial?: boolean; // Loading state from parent
 }
 
 const DeviceCard = ({
@@ -36,45 +38,32 @@ const DeviceCard = ({
   endpoint,
   historyEndpoint,
   onViewHistory,
+  initialState,
+  isLoadingInitial = false,
 }: DeviceCardProps) => {
   const { user } = useAuth();
   const token = localStorage.getItem("token");
 
-  const [isOn, setIsOn] = useState(false);
-  const [temperature, setTemperature] = useState("72");
-  const [selectedColor, setSelectedColor] = useState("red");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isOn, setIsOn] = useState<boolean | null>(null);
+  const [temperature, setTemperature] = useState<string | null>(null);
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false); // For individual actions
 
   // Derive the JSON field key (snake_case, no leading slash):
   const bodyKey = endpoint.slice(1).replace(/-/g, "_");
 
-  // Fetch current state on mount
+  // Set initial state when initialState prop changes
   useEffect(() => {
-    if (!user || !token) return;
-    const fetchState = async () => {
-      try {
-        const res = await fetch(
-          `${API_URL}/device-controls${endpoint}/user/${user.email}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        if (!res.ok) throw new Error("Failed to fetch device state");
-        const data = await res.json();
-        // Figure out which field holds our value
-        const fieldKey = Object.keys(data).find(
-          (k) => k !== "id" && k !== "user_email"
-        );
-        if (fieldKey) {
-          const value = data[fieldKey];
-          if (typeof value === "boolean") setIsOn(value);
-          else if (typeof value === "number") setTemperature(String(value));
-          else if (typeof value === "string") setSelectedColor(value);
-        }
-      } catch (error) {
-        console.error(`Error loading ${title} state:`, error);
+    if (initialState !== undefined && initialState !== null) {
+      if (typeof initialState === "boolean") {
+        setIsOn(initialState);
+      } else if (typeof initialState === "number") {
+        setTemperature(String(initialState));
+      } else if (typeof initialState === "string") {
+        setSelectedColor(initialState);
       }
-    };
-    fetchState();
-  }, [endpoint, token, user, title]);
+    }
+  }, [initialState]);
 
   // Toggle handler
   const handleToggle = async (checked: boolean) => {
@@ -164,6 +153,9 @@ const DeviceCard = ({
     onViewHistory(title, historyEndpoint);
   };
 
+  // Determine if we're still loading (either initial load or action)
+  const showLoading = isLoadingInitial || isLoading;
+
   return (
     <div className="device-card">
       <div className="flex justify-between items-center mb-3">
@@ -174,14 +166,20 @@ const DeviceCard = ({
 
         {!hasSlider && !hasColorPicker && (
           <div className="flex items-center">
-            <span className="text-xs mr-2 text-foreground/70">
-              {isOn ? "ON" : "OFF"}
-            </span>
-            <Switch
-              checked={isOn}
-              onCheckedChange={handleToggle}
-              disabled={isLoading}
-            />
+            {showLoading ? (
+              <span className="text-xs mr-2 text-foreground/70">Loading...</span>
+            ) : (
+              <>
+                <span className="text-xs mr-2 text-foreground/70">
+                  {isOn ? "ON" : "OFF"}
+                </span>
+                <Switch
+                  checked={isOn ?? false}
+                  onCheckedChange={handleToggle}
+                  disabled={showLoading}
+                />
+              </>
+            )}
           </div>
         )}
       </div>
@@ -191,45 +189,55 @@ const DeviceCard = ({
       {hasSlider && (
         <div className="mb-4">
           <div className="flex items-center space-x-2">
-            <Input
-              type="text"
-              value={temperature}
-              onChange={handleTemperatureChange}
-              className="w-20 text-right"
-              disabled={isLoading}
-              aria-label="Temperature"
-            />
-            <span className="text-foreground/70">°F</span>
-            <Button
-              size="sm"
-              onClick={handleTemperatureSubmit}
-              disabled={isLoading}
-            >
-              Set
-            </Button>
+            {showLoading ? (
+              <span className="text-sm text-foreground/70">Loading...</span>
+            ) : (
+              <>
+                <Input
+                  type="text"
+                  value={temperature ?? ""}
+                  onChange={handleTemperatureChange}
+                  className="w-20 text-right"
+                  disabled={showLoading}
+                  aria-label="Temperature"
+                />
+                <span className="text-foreground/70">°F</span>
+                <Button
+                  size="sm"
+                  onClick={handleTemperatureSubmit}
+                  disabled={showLoading}
+                >
+                  Set
+                </Button>
+              </>
+            )}
           </div>
         </div>
       )}
 
       {hasColorPicker && (
         <div className="mb-4">
-          <Select
-            value={selectedColor}
-            onValueChange={handleColorChange}
-            disabled={isLoading}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select color" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="red">Red</SelectItem>
-              <SelectItem value="green">Green</SelectItem>
-              <SelectItem value="blue">Blue</SelectItem>
-              <SelectItem value="purple">Purple</SelectItem>
-              <SelectItem value="yellow">Yellow</SelectItem>
-              <SelectItem value="white">White</SelectItem>
-            </SelectContent>
-          </Select>
+          {showLoading ? (
+            <span className="text-sm text-foreground/70">Loading...</span>
+          ) : (
+            <Select
+              value={selectedColor ?? ""}
+              onValueChange={handleColorChange}
+              disabled={showLoading}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select color" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="red">Red</SelectItem>
+                <SelectItem value="green">Green</SelectItem>
+                <SelectItem value="blue">Blue</SelectItem>
+                <SelectItem value="purple">Purple</SelectItem>
+                <SelectItem value="yellow">Yellow</SelectItem>
+                <SelectItem value="white">White</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
         </div>
       )}
 
@@ -238,7 +246,7 @@ const DeviceCard = ({
           variant="outline"
           size="sm"
           onClick={handleViewHistory}
-          disabled={isLoading}
+          disabled={showLoading}
         >
           View History
         </Button>
