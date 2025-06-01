@@ -221,9 +221,7 @@ const LiveSession = () => {
                           <span>{session.host}</span>
                           <span>{format(new Date(session.date), 'MMM d, yyyy')}</span>
                         </div>
-                        <div className="text-xs text-muted-foreground mt-1">
-                          {session.viewCount} views
-                        </div>
+                        
                       </CardContent>
                     </Card>
                   ))}
@@ -271,7 +269,7 @@ const LiveSession = () => {
               <div className="text-sm">
                 <div className="font-medium">{selectedVideo.host}</div>
                 <div className="text-muted-foreground">
-                  {format(new Date(selectedVideo.date), 'MMMM d, yyyy')} • {selectedVideo.duration} min • {selectedVideo.viewCount} views
+                  {format(new Date(selectedVideo.date), 'MMMM d, yyyy')} • {selectedVideo.duration} min 
                 </div>
               </div>
             </>
@@ -296,14 +294,18 @@ const AllSessionsList = ({ currentSession, pastSessions, formatLocalDateTime, is
     });
   }
   
-  // Add past sessions
+  // Add past sessions - check if they're actually past based on date
   pastSessions.forEach(session => {
+    const sessionDate = new Date(session.date || session.date_time);
+    const now = new Date();
+    
     allSessions.push({
       ...session,
-      type: 'past',
-      formattedDate: formatLocalDateTime(session.date)
+      type: sessionDate < now ? 'past' : 'upcoming', // Determine type based on actual date
+      formattedDate: formatLocalDateTime(session.date || session.date_time)
     });
   });
+
   
   // Sort all sessions by date (newest first)
   allSessions.sort((a, b) => {
@@ -312,75 +314,85 @@ const AllSessionsList = ({ currentSession, pastSessions, formatLocalDateTime, is
     return dateB.getTime() - dateA.getTime();
   });
   
-  return (
+ return (
     <div className="space-y-4">
       {allSessions.length > 0 ? (
-        allSessions.map(session => (
-          <Card key={session.id} className="overflow-hidden">
-            <div className="flex flex-col md:flex-row">
-              <div className="w-full md:w-1/3 h-40 md:h-auto relative">
-                {session.thumbnail ? (
-                  <img src={session.thumbnail} alt={session.title || session.session_title} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center">
-                    <Video className="h-10 w-10 text-muted-foreground" />
-                  </div>
-                )}
-                {session.type === 'live' && (
-                  <div className="absolute top-2 left-2">
-                    <Badge variant="destructive" className="flex items-center gap-1">
-                      <div className="h-2 w-2 bg-white rounded-full animate-pulse"></div>
-                      LIVE NOW
-                    </Badge>
-                  </div>
-                )}
-                {session.type === 'upcoming' && (
-                  <div className="absolute top-2 left-2">
-                    <Badge variant="outline">Upcoming</Badge>
-                  </div>
-                )}
-              </div>
-              <div className="p-4 md:p-6 w-full md:w-2/3">
-                <h3 className="text-lg font-semibold mb-2">
-                  {session.title || session.session_title}
-                </h3>
-                <div className="flex flex-col space-y-2 text-sm mb-4">
-                  <div className="flex items-center text-muted-foreground">
-                    <Calendar className="h-4 w-4 mr-2" />
-                    {session.formattedDate}
-                  </div>
-                  <div className="flex items-center text-muted-foreground">
-                    <User className="h-4 w-4 mr-2" />
-                    {session.host}
-                  </div>
-                  <div className="flex items-center text-muted-foreground">
-                    <Clock className="h-4 w-4 mr-2" />
-                    {session.duration || session.duration_minutes} minutes
-                  </div>
+        allSessions.map(session => {
+          // Double-check session type based on current date
+          const sessionDate = new Date(session.date || session.date_time);
+          const now = new Date();
+          const actualType = sessionDate < now ? 'past' : (session.livestatus ? 'live' : 'upcoming');
+          
+          return (
+            <Card key={session.id} className="overflow-hidden">
+              <div className="flex flex-col md:flex-row">
+                <div className="w-full md:w-1/3 h-40 md:h-auto relative">
+                  {session.thumbnail ? (
+                    <img src={session.thumbnail} alt={session.title || session.session_title} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center">
+                      <Video className="h-10 w-10 text-muted-foreground" />
+                    </div>
+                  )}
+                  {/* Only show live badge for actual live sessions */}
+                  {actualType === 'live' && sessionDate >= now && (
+                    <div className="absolute top-2 left-2">
+                      <Badge variant="destructive" className="flex items-center gap-1">
+                        <div className="h-2 w-2 bg-white rounded-full animate-pulse"></div>
+                        LIVE NOW
+                      </Badge>
+                    </div>
+                  )}
+                  {actualType === 'upcoming' && (
+                    <div className="absolute top-2 left-2">
+                      <Badge variant="outline">Upcoming</Badge>
+                    </div>
+                  )}
                 </div>
-                {session.type === 'past' ? (
-                  <Button 
-                    variant="secondary" 
-                    size="sm" 
-                    className="flex items-center gap-1"
-                    onClick={() => onWatchPast(session)}
-                  >
-                    <Play className="h-4 w-4" />
-                    Watch Recording
-                  </Button>
-                ) : session.type === 'live' ? (
-                  <Button size="sm" className="flex items-center gap-1">
-                    Join Live Session
-                  </Button>
-                ) : (
-                  <Button variant="outline" size="sm">
-                    Set Reminder
-                  </Button>
-                )}
+                <div className="p-4 md:p-6 w-full md:w-2/3">
+                  <h3 className="text-lg font-semibold mb-2">
+                    {session.title || session.session_title}
+                  </h3>
+                  <div className="flex flex-col space-y-2 text-sm mb-4">
+                    <div className="flex items-center text-muted-foreground">
+                      <Calendar className="h-4 w-4 mr-2" />
+                      {session.formattedDate}
+                    </div>
+                    <div className="flex items-center text-muted-foreground">
+                      <User className="h-4 w-4 mr-2" />
+                      {session.host}
+                    </div>
+                    <div className="flex items-center text-muted-foreground">
+                      <Clock className="h-4 w-4 mr-2" />
+                      {session.duration || session.duration_minutes} minutes
+                    </div>
+                  </div>
+                  {/* Fix button logic based on actual session type */}
+                  {actualType === 'past' ? (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      className="flex items-center gap-1"
+                      onClick={() => onWatchPast(session)}
+                    >
+                      <Play className="h-4 w-4" />
+                      Watch Recording
+                    </Button>
+                  ) : actualType === 'live' ? (
+                    <Button size="sm" className="flex items-center gap-1">
+                      <Video className="h-4 w-4" />
+                      Join Live Session
+                    </Button>
+                  ) : (
+                    <Button variant="outline" size="sm">
+                      Set Reminder
+                    </Button>
+                  )}
+                </div>
               </div>
-            </div>
-          </Card>
-        ))
+            </Card>
+          );
+        })
       ) : (
         <div className="text-center p-12 bg-card rounded-lg shadow">
           <h2 className="text-xl font-bold text-foreground mb-2">No Sessions Found</h2>
