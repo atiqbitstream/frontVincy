@@ -21,74 +21,143 @@ import { useAuth } from "@/hooks/useAuth";
 export interface UserOut {
   id: string;
   email: string;
-  full_name: string; // Changed from fullName to match API response
+  full_name: string;
   country: string;
   occupation: string;
-  user_status: "Active" | "Inactive" | "Pending"; // Changed from status to user_status to match API response
-  // …other personal fields…
+  user_status: "Active" | "Inactive" | "Pending";
 }
 
-const deviceControls = [
-  { title: "Sound System",       endpoint: "/sound-history",            status: Math.random() > 0.5 },
-  { title: "LED Light Therapy",  endpoint: "/led-history",              color: ["red","green","blue","purple","yellow"][Math.floor(Math.random()*5)] },
-  { title: "Steam Generator",    endpoint: "/steam-history",            status: Math.random() > 0.5 },
-  { title: "Nanoflicker",        endpoint: "/nanoflicker-history",      status: Math.random() > 0.5 },
-  { title: "Temperature Tank",   endpoint: "/temperature-tank-history", temperature: Math.floor(Math.random()*30)+60 },
-  { title: "Water Pump",         endpoint: "/water-pump-history",        status: Math.random() > 0.5 },
-];
-
-const dataForms = [
+// Health monitoring forms configuration
+const healthMonitoringForms = [
   {
     title: "Biofeedback",
-    endpoint: "/biofeedback",
+    endpoint: "biofeedback",
+    category: "health-monitoring",
     fields: [
-      { name: "heart_rate",               label: "Heart Rate (BPM)" },
-      { name: "heart_rate_variability",   label: "Heart Rate Variability (ms)" },
-      { name: "electromyography",         label: "Electromyography (μV)" },
-      { name: "electrodermal_activity",   label: "Electrodermal Activity (μS)" },
-      { name: "respiration_rate",         label: "Respiration Rate (BPM)" },
+      { name: "heart_rate", label: "Heart Rate (BPM)" },
+      { name: "heart_rate_variability", label: "Heart Rate Variability (ms)" },
+      { name: "electromyography", label: "Electromyography (μV)" },
+      { name: "electrodermal_activity", label: "Electrodermal Activity (μS)" },
+      { name: "respiration_rate", label: "Respiration Rate (BPM)" },
     ],
   },
   {
     title: "Burn Progress",
-    endpoint: "/burn-progress",
+    endpoint: "burn-progress",
+    category: "health-monitoring",
     fields: [
-      { name: "wound_size",        label: "Wound Size (cm²)" },
+      { name: "wound_size", label: "Wound Size (cm²)" },
       { name: "epithelialization", label: "Epithelialization (%)" },
-      { name: "exudate_amount",    label: "Exudate Amount (ml)" },
-      { name: "pain_level",        label: "Pain Level (0-10)" },
-      { name: "swelling",          label: "Swelling (0-10)" },
+      { name: "exudate_amount", label: "Exudate Amount (ml)" },
+      { name: "pain_level", label: "Pain Level (0-10)" },
+      { name: "swelling", label: "Swelling (0-10)" },
     ],
   },
   {
     title: "Brain Monitoring",
-    endpoint: "/brain-monitoring",
+    endpoint: "brain-monitoring",
+    category: "health-monitoring",
     fields: [
-      { name: "alpha_waves",  label: "Alpha Waves (Hz)" },
-      { name: "theta_waves",  label: "Theta Waves (Hz)" },
-      { name: "beta_waves",   label: "Beta Waves (Hz)" },
-      { name: "gamma_waves",  label: "Gamma Waves (Hz)" },
-      { name: "heart_rate",   label: "Heart Rate (BPM)" },
+      { name: "alpha_waves", label: "Alpha Waves (Hz)" },
+      { name: "theta_waves", label: "Theta Waves (Hz)" },
+      { name: "beta_waves", label: "Beta Waves (Hz)" },
+      { name: "gamma_waves", label: "Gamma Waves (Hz)" },
+      { name: "heart_rate", label: "Heart Rate (BPM)" },
     ],
   },
   {
     title: "Heart-Brain Synchronicity",
-    endpoint: "/heart-brain-synchronicity",
+    endpoint: "heart-brain-synchronicity",
+    category: "health-monitoring",
     fields: [
-      { name: "heart_rate_variability",       label: "Heart Rate Variability (ms)" },
-      { name: "alpha_waves",                  label: "Alpha Waves (Hz)" },
+      { name: "heart_rate_variability", label: "Heart Rate Variability (ms)" },
+      { name: "alpha_waves", label: "Alpha Waves (Hz)" },
       { name: "respiratory_sinus_arrhythmia", label: "RSA (ms)" },
-      { name: "coherence_ratio",              label: "Coherence Ratio" },
-      { name: "brainwave_coherence",          label: "Brainwave Coherence (%)" },
+      { name: "coherence_ratio", label: "Coherence Ratio" },
+      { name: "brainwave_coherence", label: "Brainwave Coherence (%)" },
     ],
   },
 ];
+
+// Device controls configuration
+const deviceControlForms = [
+  {
+    title: "Sound System",
+    endpoint: "sound",
+    category: "device-controls",
+    fields: [
+      { name: "status", label: "Status" },
+      { name: "volume", label: "Volume" },
+      { name: "frequency", label: "Frequency (Hz)" },
+    ],
+  },
+  {
+    title: "Steam Generator",
+    endpoint: "steam",
+    category: "device-controls",
+    fields: [
+      { name: "status", label: "Status" },
+      { name: "intensity", label: "Intensity" },
+      { name: "duration", label: "Duration (minutes)" },
+    ],
+  },
+  {
+    title: "Temperature Tank",
+    endpoint: "temp-tank",
+    category: "device-controls",
+    fields: [
+      { name: "temperature", label: "Temperature (°C)" },
+      { name: "status", label: "Status" },
+    ],
+  },
+  {
+    title: "Water Pump",
+    endpoint: "water-pump",
+    category: "device-controls",
+    fields: [
+      { name: "status", label: "Status" },
+      { name: "flow_rate", label: "Flow Rate" },
+      { name: "pressure", label: "Pressure" },
+    ],
+  },
+  {
+    title: "Nanoflicker",
+    endpoint: "nano-flicker",
+    category: "device-controls",
+    fields: [
+      { name: "status", label: "Status" },
+      { name: "frequency", label: "Frequency (Hz)" },
+      { name: "intensity", label: "Intensity" },
+    ],
+  },
+  {
+    title: "LED Light Therapy",
+    endpoint: "led-color",
+    category: "device-controls",
+    fields: [
+      { name: "color", label: "Color" },
+      { name: "intensity", label: "Intensity" },
+      { name: "duration", label: "Duration (minutes)" },
+    ],
+  },
+];
+
+// Combine all forms
+const allDataForms = [...healthMonitoringForms, ...deviceControlForms];
 
 const UserTable = () => {
   const [users, setUsers] = useState<UserOut[]>([]);
   const [selectedUser, setSelectedUser] = useState<UserOut | null>(null);
   const [viewingDevice, setViewingDevice] = useState<{ name: string; endpoint: string } | null>(null);
-  const [viewingFormData, setViewingFormData] = useState<{ formType: string; userId: string; userName: string } | null>(null);
+  const [viewingFormData, setViewingFormData] = useState<{ 
+    formType: string; 
+    userId: string; 
+    userName: string;
+    userEmail: string; // Add userEmail
+    endpoint: string;
+    category: string;
+    fields: Array<{ name: string; label: string }>;
+  } | null>(null);
   const [editingUser, setEditingUser] = useState<UserOut | null>(null);
 
   const { token } = useAuth();
@@ -105,10 +174,10 @@ const UserTable = () => {
         console.error("Failed to load users:", e);
         toast.error("Could not load users");
       });
-  }, []);
+  }, [API_URL, token]);
 
   const { user } = useAuth();
-  const adminEmail=user?.email;
+  const adminEmail = user?.email;
 
   const handleViewUser = (user: UserOut) => setSelectedUser(user);
   const handleCloseUserModal = () => setSelectedUser(null);
@@ -130,8 +199,16 @@ const UserTable = () => {
     toast.success("User updated");
   };
 
-  const handleViewUserFormData = (title: string, userId: string, userName: string) => {
-    setViewingFormData({ formType: title, userId, userName });
+  const handleViewUserFormData = (form: typeof allDataForms[0], userId: string, userName: string, userEmail: string) => {
+    setViewingFormData({ 
+      formType: form.title, 
+      userId, 
+      userName,
+      userEmail, // Pass userEmail
+      endpoint: form.endpoint,
+      category: form.category,
+      fields: form.fields
+    });
   };
   const handleCloseFormHistory = () => setViewingFormData(null);
 
@@ -194,51 +271,64 @@ const UserTable = () => {
       {/* User Detail Modal */}
       {selectedUser && (
         <Dialog open={!!selectedUser} onOpenChange={handleCloseUserModal}>
-          <DialogContent className="sm:max-w-4xl">
+          <DialogContent className="sm:max-w-6xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>{selectedUser.full_name}</DialogTitle>
+              <DialogTitle>{selectedUser.full_name} - Data Management</DialogTitle>
             </DialogHeader>
 
-            {/* Toggle between device cards and form cards */}
-            {viewingDevice ? (
-              <UserDeviceHistory
-                isOpen={!!viewingDevice}
-                onClose={handleCloseDeviceHistory}
-                title={viewingDevice.name}
-                endpoint={viewingDevice.endpoint}
-                userId={selectedUser.id}
-                userName={selectedUser.full_name}
-              />
-            ) : (
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {dataForms.map((form) => (
+            <div className="space-y-6">
+              {/* Health Monitoring Section */}
+              <div>
+                <h3 className="text-lg font-semibold mb-4 text-blue-600">Health Monitoring</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {healthMonitoringForms.map((form) => (
                     <div
                       key={form.title}
-                      className="border rounded-lg p-4 hover:shadow-sm transition-shadow"
+                      className="border rounded-lg p-4 hover:shadow-md transition-shadow bg-blue-50"
                     >
-                      <h3 className="font-semibold mb-2">{form.title}</h3>
-                      <p className="text-sm text-foreground/70 mb-4">
-                        View or manage {form.title.toLowerCase()}
+                      <h4 className="font-semibold mb-2">{form.title}</h4>
+                      <p className="text-sm text-gray-600 mb-4">
+                        View and manage {form.title.toLowerCase()} data
                       </p>
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() =>
-                          handleViewUserFormData(
-                            form.title,
-                            selectedUser.id,
-                            selectedUser.full_name
-                          )
-                        }
+                        className="w-full"
+                        onClick={() => handleViewUserFormData(form, selectedUser.id, selectedUser.full_name, selectedUser.email)}
                       >
-                        View Form Data
+                        View Data
                       </Button>
                     </div>
                   ))}
                 </div>
               </div>
-            )}
+
+              {/* Device Controls Section */}
+              <div>
+                <h3 className="text-lg font-semibold mb-4 text-green-600">Device Controls</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {deviceControlForms.map((form) => (
+                    <div
+                      key={form.title}
+                      className="border rounded-lg p-4 hover:shadow-md transition-shadow bg-green-50"
+                    >
+                      <h4 className="font-semibold mb-2">{form.title}</h4>
+                      <p className="text-sm text-gray-600 mb-4">
+                        View and manage {form.title.toLowerCase()} settings
+                      </p>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="w-full"
+                        onClick={() => handleViewUserFormData(form, selectedUser.id, selectedUser.full_name, selectedUser.email)}
+                      >
+                        View Settings
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </DialogContent>
         </Dialog>
       )}
@@ -260,10 +350,10 @@ const UserTable = () => {
           title={viewingFormData.formType}
           userId={viewingFormData.userId}
           userName={viewingFormData.userName}
-          fields={
-            dataForms.find((f) => f.title === viewingFormData.formType)
-              ?.fields || []
-          }
+          userEmail={viewingFormData.userEmail}
+          endpoint={viewingFormData.endpoint}
+          category={viewingFormData.category}
+          fields={viewingFormData.fields}
         />
       )}
     </div>

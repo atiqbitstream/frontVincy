@@ -382,6 +382,14 @@ const LiveSessionManager = () => {
     return sessionTime > now;
   };
 
+  // First, add this helper function near your other utility functions
+  const isSessionEnded = (dateTimeStr: string, durationMinutes: number) => {
+    const sessionStartTime = new Date(dateTimeStr).getTime();
+    const sessionEndTime = sessionStartTime + (durationMinutes * 60 * 1000);
+    const now = new Date().getTime();
+    return now > sessionEndTime;
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -656,11 +664,23 @@ const LiveSessionManager = () => {
                       <TableCell>{session.duration_minutes} mins</TableCell>
                       <TableCell>
                         <div className="flex items-center space-x-2">
-                          <div className={`h-2 w-2 rounded-full ${session.livestatus ? 'bg-green-500' : isSessionUpcoming(session.date_time) ? 'bg-yellow-500' : 'bg-gray-400'}`}></div>
+                          <div className={`h-2 w-2 rounded-full ${
+                            isSessionEnded(session.date_time, session.duration_minutes) 
+                              ? 'bg-gray-400' 
+                              : session.livestatus 
+                                ? 'bg-green-500' 
+                                : isSessionUpcoming(session.date_time) 
+                                  ? 'bg-yellow-500' 
+                                  : 'bg-gray-400'
+                          }`}></div>
                           <span className="text-sm">
-                            {session.livestatus 
-                              ? 'Live'
-                              : isSessionUpcoming(session.date_time) ? 'Upcoming' : 'Ended'}
+                            {isSessionEnded(session.date_time, session.duration_minutes)
+                              ? 'Ended'
+                              : session.livestatus
+                                ? 'Live'
+                                : isSessionUpcoming(session.date_time)
+                                  ? 'Upcoming'
+                                  : 'Ended'}
                           </span>
                         </div>
                       </TableCell>
@@ -673,14 +693,14 @@ const LiveSessionManager = () => {
                           >
                             Select
                           </Button>
-                          {isSessionUpcoming(session.date_time) ? (
+                          {isSessionUpcoming(session.date_time) && !isSessionEnded(session.date_time, session.duration_minutes) ? (
   <Switch
     checked={session.livestatus}
     onCheckedChange={(checked) => toggleLiveStatus(session.id, checked)}
     className="mr-2"
   />
 ) : (
-  <div className="w-9 mr-2"></div> // Empty placeholder to maintain alignment
+  <div className="w-9 mr-2"></div>
 )}
                           <Dialog open={deleteConfirmId === session.id} onOpenChange={(open) => !open && setDeleteConfirmId(null)}>
                             <DialogTrigger asChild>
