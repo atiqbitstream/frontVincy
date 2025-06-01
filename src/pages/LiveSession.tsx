@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useRef } from "react"; // Remove useEffect from imports
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "../hooks/useAuth";
@@ -18,20 +18,14 @@ const LiveSession = () => {
     formattedPastSessions,
     loading,
     isLive,
-    timeRemaining: initialTimeRemaining,
+    timeRemaining, // Use this directly, remove initialTimeRemaining
     error,
     formatLocalDateTime
   } = useLiveSession();
   
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [activeTab, setActiveTab] = useState("current");
-  const [timeRemaining, setTimeRemaining] = useState(initialTimeRemaining);
-
-  // Set flag to track component is active
-  useEffect(() => {
-    localStorage.setItem('livesessionactive', 'true');
-    return () => localStorage.removeItem('livesessionactive');
-  }, []);
+  const didMount = useRef(false);
 
   const handleWatchPastSession = (session) => {
     setSelectedVideo(session);
@@ -41,16 +35,8 @@ const LiveSession = () => {
     setSelectedVideo(null);
   };
 
-  useEffect(() => {
-    if (!currentSession || isLive) return;
-    const updateTimeRemaining = () => {
-      const remaining = liveSessionService.getTimeRemaining(currentSession.date_time);
-      setTimeRemaining(remaining);
-    };
-    updateTimeRemaining();
-    const countdownId = setInterval(updateTimeRemaining, 1000); // UI only
-    return () => clearInterval(countdownId);
-  }, [currentSession, isLive]);
+  // Remove the useEffect hooks for mounting and timeRemaining
+  // They are now handled in the useLiveSession hook
 
   if (loading) {
     return (

@@ -1,7 +1,7 @@
 // src/components/Navbar.tsx
 import { Link } from "react-router-dom";
 import { LogOut, Menu, X, Sun, Moon, Video } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { useTheme } from "../hooks/useTheme";
 import { toast } from "sonner";
@@ -23,6 +23,11 @@ const Navbar = () => {
     sessionId: null,
   });
 
+  // Refs to prevent infinite loops
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const countdownRef = useRef<NodeJS.Timeout | null>(null);
+  const mountedRef = useRef(true);
+
   // Toggle mobile menu
   const toggleMenu = () => {
     setIsOpen((o) => !o);
@@ -36,70 +41,84 @@ const Navbar = () => {
   };
 
   // Fetch live session data
-  useEffect(() => {
-    let intervalId: number;
-    
-    const fetchLiveSessionData = async () => {
-      try {
-        const session = await liveSessionService.getCurrentLiveSession();
-        
-        if (!session) {
-          setLiveStatus({
-            isLive: false,
-            timeRemaining: null,
-            label: "",
-            sessionId: null
-          });
-          return;
-        }
-        
-        updateLiveStatus(session);
-      } catch (error) {
-        console.error("Error fetching live session data:", error);
-      }
-    };
+  const fetchLiveSessionData = async () => {
+    try {
+      const session = await liveSessionService.getCurrentLiveSession();
+      if (!mountedRef.current) return;
 
-    // Update live status based on session data
-    const updateLiveStatus = (session: LiveSession) => {
-      if (session.livestatus) {
-        setLiveStatus({
-          isLive: true,
-          timeRemaining: null,
-          label: session.session_title,
-          sessionId: session.id
-        });
-      } else {
-        const timeRemaining = liveSessionService.getTimeRemaining(session.date_time);
+      if (!session) {
         setLiveStatus({
           isLive: false,
-          timeRemaining,
-          label: session.session_title,
-          sessionId: session.id
+          timeRemaining: null,
+          label: "",
+          sessionId: null
         });
+        return;
       }
-    };
+
+      updateLiveStatus(session);
+    } catch (error) {
+      console.error("Error fetching live session data:", error);
+    }
+  };
+
+  // Update live status based on session data
+  const updateLiveStatus = (session: LiveSession) => {
+    if (!mountedRef.current) return;
+
+    if (session.livestatus) {
+      setLiveStatus({
+        isLive: true,
+        timeRemaining: null,
+        label: session.session_title,
+        sessionId: session.id
+      });
+    } else {
+      const timeRemaining = liveSessionService.getTimeRemaining(session.date_time);
+      setLiveStatus({
+        isLive: false,
+        timeRemaining,
+        label: session.session_title,
+        sessionId: session.id
+      });
+    }
+  };
+
+  // Setup polling on mount
+  useEffect(() => {
+    mountedRef.current = true;
 
     // Initial fetch
     fetchLiveSessionData();
-    
-    // Set up polling - check every minute
-    intervalId = window.setInterval(fetchLiveSessionData, 60000);
-    
+
+    // Set up polling - check every 2 minutes (reduce frequency)
+    intervalRef.current = setInterval(fetchLiveSessionData, 120000);
+
     return () => {
-      clearInterval(intervalId);
+      mountedRef.current = false;
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
     };
   }, []);
 
-  // Update time remaining countdown
+  // Update time remaining countdown - only if not live
   useEffect(() => {
-    if (!liveStatus.sessionId || liveStatus.isLive) return;
-    
+    if (countdownRef.current) {
+      clearInterval(countdownRef.current);
+    }
+
+    if (!liveStatus.sessionId || liveStatus.isLive) {
+      return;
+    }
+
     const updateTimeRemaining = async () => {
+      if (!mountedRef.current) return;
+      
       try {
         const session = await liveSessionService.getCurrentLiveSession();
-        if (session) {
+        if (session && mountedRef.current) {
           const timeRemaining = liveSessionService.getTimeRemaining(session.date_time);
-          
           setLiveStatus(prev => ({
             ...prev,
             timeRemaining,
@@ -110,14 +129,28 @@ const Navbar = () => {
         console.error("Error updating time remaining:", error);
       }
     };
-    
-    // Update every second for the countdown
-    const countdownId = window.setInterval(updateTimeRemaining, 1000);
-    
+
+    // Update every 30 seconds for the countdown (less frequent)
+    countdownRef.current = setInterval(updateTimeRemaining, 30000);
+
     return () => {
-      clearInterval(countdownId);
+      if (countdownRef.current) {
+        clearInterval(countdownRef.current);
+      }
     };
   }, [liveStatus.sessionId, liveStatus.isLive]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+      if (countdownRef.current) {
+        clearInterval(countdownRef.current);
+      }
+    };
+  }, []);
 
   return (
     <nav className="bg-card shadow-md border-b border-border">
@@ -132,6 +165,7 @@ const Navbar = () => {
               Wellness Optimal Mind Body
             </span>
           </div>
+
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-6">
             <Link
@@ -159,7 +193,7 @@ const Navbar = () => {
               Contact Us
             </Link>
             <Link
-              to={liveStatus.isLive ? "/live-session" : liveStatus.timeRemaining ? "/live-session" : "/live-session"}
+              to="/live-session"
               className={`px-3 py-2 rounded-md text-sm font-medium flex items-center ${
                 liveStatus.isLive
                   ? "text-green-500 font-semibold"
@@ -177,6 +211,7 @@ const Navbar = () => {
                 <>Live Session</>
               )}
             </Link>
+
             <button
               onClick={toggleTheme}
               className="p-2 rounded-full hover:bg-muted/50"
@@ -188,6 +223,7 @@ const Navbar = () => {
                 <Moon size={20} className="text-blue-700" />
               )}
             </button>
+
             {isAuthenticated ? (
               <button
                 onClick={logout}
@@ -205,6 +241,7 @@ const Navbar = () => {
               </Link>
             )}
           </div>
+
           {/* Mobile Toggle */}
           <div className="md:hidden flex items-center space-x-2">
             <button
@@ -227,6 +264,7 @@ const Navbar = () => {
           </div>
         </div>
       </div>
+
       {/* Mobile Menu */}
       {isOpen && (
         <div className="md:hidden animate-fade-in bg-card border-t border-border">
@@ -279,6 +317,7 @@ const Navbar = () => {
                 <>Live Session</>
               )}
             </Link>
+
             {isAuthenticated ? (
               <button
                 onClick={() => {

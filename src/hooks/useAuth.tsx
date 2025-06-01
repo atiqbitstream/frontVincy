@@ -88,7 +88,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  const fetchUser = async (jwt: string) => {
+  const fetchUser = async (jwt: string): Promise<User | undefined> => {
     try {
       const res = await fetch(`${API_URL}/users/me`, {
         headers: { Authorization: `Bearer ${jwt}` },
@@ -104,6 +104,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isAdmin: raw.role === "Admin", // ← derive the flag
       };
       setUser(me);
+      return me;
     } catch (err) {
       console.error("Fetch user failed:", err);
       logout();
@@ -150,11 +151,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const { access_token } = await res.json();
       localStorage.setItem("token", access_token);
       setToken(access_token);
-      await fetchUser(access_token);
-
+      const user = await fetchUser(access_token); // Fetch user details
       toast.success("Login successful!");
-      const from = (location.state as any)?.from?.pathname || "/dashboard";
-      navigate(from, { replace: true });
+
+      // Redirect based on user role
+      if (user && user.role === "Admin") {
+        navigate("/admin/dashboard", { replace: true });
+      } else {
+        navigate("/dashboard", { replace: true });
+      }
     } catch (error: any) {
       console.error("Login error:", error);
       toast.error(error.message || "Login failed");

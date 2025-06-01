@@ -28,6 +28,7 @@ interface FormattedPastSession {
 export function useLiveSession() {
   const { token } = useAuth();
   const liveSessionService = useLiveSessionService();
+  
   const [state, setState] = useState<LiveSessionState>({
     currentSession: null,
     pastSessions: [],
@@ -35,182 +36,221 @@ export function useLiveSession() {
     isLive: false,
     timeRemaining: null,
     loading: true,
-    error: null
+    error: null,
   });
   
   const [formattedPastSessions, setFormattedPastSessions] = useState<FormattedPastSession[]>([]);
   
-  // Use refs to track fetch state and prevent excessive calls
+  // Use refs to prevent infinite loops
   const isFetchingRef = useRef(false);
   const lastFetchTimeRef = useRef(0);
   const sessionDateTimeRef = useRef<string | null>(null);
-  
+  const mountedRef = useRef(true);
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Stable fetch function - memoized with proper dependencies
   const fetchLiveSessionData = useCallback(async () => {
-    // Prevent multiple simultaneous fetches
-    if (isFetchingRef.current) return;
-    
-    // Debounce requests - prevent calling more than once every 10 seconds
-    const now = Date.now();
-    if (now - lastFetchTimeRef.current < 10000) return;
-    
-    // Check if we're still on the LiveSession page
-    if (typeof window !== 'undefined' && !localStorage.getItem('livesessionactive')) return;
-    
-    // Set fetch flags
-    isFetchingRef.current = true;
-    lastFetchTimeRef.current = now;
-    
-    if (!token) {
-      setState(prev => ({ ...prev, loading: false, error: new Error('Authentication required') }));
-      isFetchingRef.current = false;
+    if (isFetchingRef.current) {
+      console.log('Skipping fetch - already fetching');
       return;
     }
-    
+
+    // Increase debounce to 5 seconds to prevent spam
+    const now = Date.now();
+    if (now - lastFetchTimeRef.current < 5000) {
+      console.log('Skipping fetch - debounce period not elapsed');
+      return;
+    }
+
+    isFetchingRef.current = true;
+    lastFetchTimeRef.current = now;
+    console.log('Starting live session data fetch');
+
     try {
-      // Only set loading state on initial load
-      if (state.loading) {
-        setState(prev => ({ ...prev, loading: true, error: null }));
-      }
-      
-      // Get all sessions
       const allSessions = await liveSessionService.getAllLiveSessions();
+      
+      if (!mountedRef.current) return; // Component unmounted
+      
       const nowDate = new Date();
-      
-      // Categorize sessions
+
+      // Past sessions: date_time < now && has youtube_link
       const pastSessions = allSessions
-        .filter(session => new Date(session.date_time) < nowDate && session.youtube_link)
+        .filter((session) => new Date(session.date_time) < nowDate && session.youtube_link)
         .sort((a, b) => new Date(b.date_time).getTime() - new Date(a.date_time).getTime());
-      
+
+      // Upcoming sessions: date_time > now && !livestatus
       const upcomingSessions = allSessions
-        .filter(session => new Date(session.date_time) > nowDate && !session.livestatus)
+        .filter((session) => new Date(session.date_time) > nowDate && !session.livestatus)
         .sort((a, b) => new Date(a.date_time).getTime() - new Date(b.date_time).getTime());
-        
-      // Find current live session
-      const liveSession = allSessions.find(session => session.livestatus);
-      
-      // Determine current session (live or next upcoming)
+
+      // Live session if any has livestatus === true
+      const liveSession = allSessions.find((session) => session.livestatus);
       const currentSession = liveSession || (upcomingSessions.length > 0 ? upcomingSessions[0] : null);
-      
+
       // Format past sessions for UI
-      const formatted = pastSessions.map(session => 
+      const formatted = pastSessions.map((session) =>
         liveSessionService.formatAsPastSession(session)
       );
-      setFormattedPastSessions(formatted);
-      
-      // Save the current session date for countdown
-      if (currentSession) {
-        sessionDateTimeRef.current = currentSession.date_time;
-      } else {
-        sessionDateTimeRef.current = null;
-      }
-      
-      // Determine live status and initial time remaining
-      let timeRemaining: string | null = null;
-      let isLive = false;
 
-      if (currentSession) {
-        isLive = currentSession.livestatus;
-        if (!isLive) {
-          timeRemaining = liveSessionService.getTimeRemaining(currentSession.date_time);
+      if (mountedRef.current) {
+        setFormattedPastSessions(formatted);
+
+        if (currentSession) {
+          sessionDateTimeRef.current = currentSession.date_time;
+        } else {
+          sessionDateTimeRef.current = null;
         }
-      }
 
-      setState({
-        currentSession,
-        pastSessions,
-        upcomingSessions,
-        isLive,
-        timeRemaining,
-        loading: false,
-        error: null
-      });
+        let timeRemaining: string | null = null;
+        let isLive = false;
+
+        if (currentSession) {
+          isLive = !!currentSession.livestatus;
+          if (!isLive) {
+            timeRemaining = liveSessionService.getTimeRemaining(currentSession.date_time);
+          }
+        }
+
+        setState({
+          currentSession,
+          pastSessions,
+          upcomingSessions,
+          isLive,
+          timeRemaining,
+          loading: false,
+          error: null,
+        });
+
+        console.log('Processed data:', {
+          currentSession: currentSession?.session_title,
+          pastSessions: pastSessions.length,
+          upcomingSessions: upcomingSessions.length,
+          isLive
+        });
+      }
     } catch (error) {
-      console.error("Error fetching live session data:", error);
-      setState(prev => ({ 
-        ...prev, 
-        loading: false, 
-        error: error instanceof Error ? error : new Error('Unknown error') 
-      }));
+      console.error('Error fetching live session data:', error);
+      if (mountedRef.current) {
+        setState((prev) => ({
+          ...prev,
+          loading: false,
+          error: error instanceof Error ? error : new Error('Unknown error'),
+        }));
+      }
     } finally {
       isFetchingRef.current = false;
     }
-  }, [token, liveSessionService, state.loading]);
+  }, [liveSessionService]); // Remove token dependency to prevent recreating
 
-  // Set up an active marker when the component mounts
+  // Setup polling on mount only
   useEffect(() => {
-    // Set flag to indicate the component is active
-    localStorage.setItem('livesessionactive', 'true');
+    console.log('Setting up live session polling');
+    mountedRef.current = true;
     
-    return () => {
-      // Clean up flag when component unmounts
-      localStorage.removeItem('livesessionactive');
-    };
-  }, []);
+    // Clear any existing intervals
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+    }
 
-  // Main data fetching effect - initial load and polling
-  useEffect(() => {
-    // Initial data fetch
+    // Initial fetch
     fetchLiveSessionData();
-    
-    // Poll every 30 seconds (reduced from every minute)
-    const intervalId = setInterval(fetchLiveSessionData, 30000);
-    
-    return () => clearInterval(intervalId);
-  }, [fetchLiveSessionData]);
 
-  // Dedicated effect for countdown timer that doesn't trigger re-fetching
+    // Set up polling every 30 seconds
+    pollingIntervalRef.current = setInterval(() => {
+      if (mountedRef.current) {
+        fetchLiveSessionData();
+      }
+    }, 30000);
+
+    console.log('⏱️ Polling started (30s interval)');
+
+    return () => {
+      console.log('🧹 Cleaning up polling interval');
+      mountedRef.current = false;
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+      }
+    };
+  }, []); // Empty dependency array - only run on mount/unmount
+
+  // Separate effect for countdown
   useEffect(() => {
-    if (!sessionDateTimeRef.current || state.isLive) return;
-    
+    // Clear existing countdown interval
+    if (countdownIntervalRef.current) {
+      clearInterval(countdownIntervalRef.current);
+      countdownIntervalRef.current = null;
+    }
+
+    if (!sessionDateTimeRef.current || state.isLive) {
+      return;
+    }
+
     const updateTimeRemaining = () => {
-      if (!sessionDateTimeRef.current) return;
+      if (!sessionDateTimeRef.current || !mountedRef.current) return;
       
       const remaining = liveSessionService.getTimeRemaining(sessionDateTimeRef.current);
       
-      // Only update if the time has actually changed
-      if (remaining !== state.timeRemaining) {
-        setState(prev => ({
-          ...prev,
-          timeRemaining: remaining
-        }));
+      setState((prev) => {
+        if (remaining !== prev.timeRemaining) {
+          return { ...prev, timeRemaining: remaining };
+        }
+        return prev;
+      });
+    };
+
+    // Initial update
+    updateTimeRemaining();
+
+    // Set up countdown interval
+    countdownIntervalRef.current = setInterval(updateTimeRemaining, 1000);
+
+    return () => {
+      if (countdownIntervalRef.current) {
+        clearInterval(countdownIntervalRef.current);
+        countdownIntervalRef.current = null;
       }
     };
-    
-    // Update immediately and then every second
-    updateTimeRemaining();
-    const countdownId = setInterval(updateTimeRemaining, 1000);
-    
-    return () => clearInterval(countdownId);
-  }, [state.isLive, liveSessionService, state.timeRemaining]);
+  }, [state.isLive, sessionDateTimeRef.current, liveSessionService]);
 
-  // Effect to reload if token changes
+  // Handle token changes
   useEffect(() => {
     if (token) {
-      // Reset timer to allow immediate fetch
-      lastFetchTimeRef.current = 0;
+      console.log('Token changed, refreshing data');
+      lastFetchTimeRef.current = 0; // Reset debounce
       fetchLiveSessionData();
     }
   }, [token, fetchLiveSessionData]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+      if (countdownIntervalRef.current) {
+        clearInterval(countdownIntervalRef.current);
+      }
+    };
+  }, []);
 
   return {
     ...state,
     formattedPastSessions,
     refresh: fetchLiveSessionData,
-    
-    // Helper method to format date in local timezone
     formatLocalDateTime: (dateTimeString: string) => {
       const dateTime = new Date(dateTimeString);
-      const options: Intl.DateTimeFormatOptions = { 
+      return dateTime.toLocaleDateString(undefined, {
         weekday: 'long',
-        year: 'numeric', 
-        month: 'long', 
+        year: 'numeric',
+        month: 'long',
         day: 'numeric',
         hour: 'numeric',
         minute: 'numeric',
-        timeZoneName: 'short'
-      };
-      return dateTime.toLocaleDateString(undefined, options);
-    }
+        timeZoneName: 'short',
+      });
+    },
   };
 }
 
