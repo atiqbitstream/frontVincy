@@ -353,20 +353,27 @@ const LiveSessionManager = () => {
       return allSessions;
     }
     
+    // Convert filter date to start and end of day in local timezone
     const filterDate = new Date(dateFilter);
-    // Set the time to the beginning of the day
-    filterDate.setHours(0, 0, 0, 0);
+    const startOfDay = new Date(filterDate);
+    startOfDay.setHours(0, 0, 0, 0);
+    
+    const endOfDay = new Date(filterDate);
+    endOfDay.setHours(23, 59, 59, 999);
     
     return allSessions.filter(session => {
       const sessionDate = new Date(session.date_time);
-      // Set time to beginning of day for comparison
-      sessionDate.setHours(0, 0, 0, 0);
-      return sessionDate.getTime() === filterDate.getTime();
+      return sessionDate >= startOfDay && sessionDate <= endOfDay;
     });
   };
   
   const formatSessionDate = (dateTimeStr: string) => {
-    return new Date(dateTimeStr).toLocaleDateString();
+    const date = new Date(dateTimeStr);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
   };
 
   const formatSessionTime = (dateTimeStr: string) => {
