@@ -20,6 +20,7 @@ import About from "./pages/About";
 import News from "./pages/News";
 import Contact from "./pages/Contact";
 import LiveSession from "./pages/LiveSession";
+import Landing from "./pages/Landing";
 
 const queryClient = new QueryClient();
 
@@ -67,7 +68,8 @@ const App = () => (
                 path="/live-session" 
                 element={<LiveSession />} 
               />
-              <Route path="/" element={<Index />} />
+              <Route path="/" element={<Landing />} />
+              <Route path="/dashboard-redirect" element={<Index />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </AuthProvider>
