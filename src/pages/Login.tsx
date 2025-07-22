@@ -21,23 +21,78 @@ const Login = () => {
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const { login, loading } = useAuth();
 
+  // Enhanced validation functions
+  const validateEmail = (email: string): string | null => {
+    if (!email) return "Email address is required";
+    if (email.length > 254) return "Email address is too long";
+    
+    // Professional email regex validation
+    const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+    if (!emailRegex.test(email.trim())) return "Please enter a valid email address";
+    
+    return null;
+  };
+
+  const validatePassword = (password: string): string | null => {
+    if (!password) return "Password is required";
+    if (password.length < 1) return "Password cannot be empty";
+    if (password.length > 128) return "Password is too long";
+    if (password.trim() !== password) return "Password cannot start or end with spaces";
+    
+    return null;
+  };
+
   const validateForm = () => {
     const newErrors: { email?: string; password?: string } = {};
 
-    if (!email) {
-      newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = "Email is invalid";
-    }
+    // Validate email
+    const emailError = validateEmail(email);
+    if (emailError) newErrors.email = emailError;
 
-    if (!password) {
-      newErrors.password = "Password is required";
-    } else if (password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
-    }
+    // Validate password
+    const passwordError = validatePassword(password);
+    if (passwordError) newErrors.password = passwordError;
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+  // Real-time validation on blur
+  const handleEmailBlur = () => {
+    const emailError = validateEmail(email);
+    setErrors(prev => ({
+      ...prev,
+      email: emailError || undefined
+    }));
+  };
+
+  const handlePasswordBlur = () => {
+    const passwordError = validatePassword(password);
+    setErrors(prev => ({
+      ...prev,
+      password: passwordError || undefined
+    }));
+  };
+
+  // Clear errors when user starts typing
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setEmail(value);
+    
+    // Clear error when user starts typing
+    if (errors.email) {
+      setErrors(prev => ({ ...prev, email: undefined }));
+    }
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setPassword(value);
+    
+    // Clear error when user starts typing
+    if (errors.password) {
+      setErrors(prev => ({ ...prev, password: undefined }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -66,17 +121,27 @@ const Login = () => {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">Email Address</Label>
               <Input
                 id="email"
+                name="email"
                 type="email"
-                placeholder="name@example.com"
+                placeholder="Enter your email address"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={handleEmailChange}
+                onBlur={handleEmailBlur}
                 className={errors.email ? "border-red-500" : ""}
+                maxLength={254}
+                autoComplete="email"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck="false"
               />
               {errors.email && (
-                <p className="text-sm text-red-500">{errors.email}</p>
+                <p className="text-sm text-red-500 flex items-center gap-1">
+                  <span className="text-red-500">⚠</span>
+                  {errors.email}
+                </p>
               )}
             </div>
 
@@ -92,25 +157,33 @@ const Login = () => {
               </div>
               <Input
                 id="password"
+                name="password"
                 type="password"
+                placeholder="Enter your password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={handlePasswordChange}
+                onBlur={handlePasswordBlur}
                 className={errors.password ? "border-red-500" : ""}
+                maxLength={128}
+                autoComplete="current-password"
               />
               {errors.password && (
-                <p className="text-sm text-red-500">{errors.password}</p>
+                <p className="text-sm text-red-500 flex items-center gap-1">
+                  <span className="text-red-500">⚠</span>
+                  {errors.password}
+                </p>
               )}
             </div>
 
             <Button
               type="submit"
               className="w-full bg-health-primary hover:bg-health-secondary"
-              disabled={loading}
+              disabled={loading || !email || !password}
             >
               {loading ? (
                 <div className="flex items-center">
                   <div className="animate-spin mr-2 h-4 w-4 border-2 border-white rounded-full border-t-transparent"></div>
-                  Logging in...
+                  Signing in...
                 </div>
               ) : (
                 "Sign In"
