@@ -99,14 +99,33 @@ const LiveSession = () => {
               <div className="bg-card text-card-foreground rounded-lg shadow overflow-hidden mb-12">
                 {isLive && currentSession.youtube_link ? (
                   <div className="relative pb-[56.25%] h-0">
-                    <iframe
-                      src={`${currentSession.youtube_link.replace('watch?v=', 'embed/')}?autoplay=1`}
-                      className="absolute top-0 left-0 w-full h-full"
-                      frameBorder="0"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                      title="Live Session"
-                    />
+                    {currentSession.youtube_link.includes('<iframe') ? (
+                      // If youtube_link contains iframe HTML, render it directly
+                      <div 
+                        className="absolute top-0 left-0 w-full h-full"
+                        dangerouslySetInnerHTML={{ 
+                          __html: currentSession.youtube_link.replace(
+                            /width="\d+"/, 'width="100%"'
+                          ).replace(
+                            /height="\d+"/, 'height="100%"'
+                          ).replace(
+                            /class="[^"]*"/, 'class="absolute top-0 left-0 w-full h-full"'
+                          ).replace(
+                            /<iframe/, '<iframe class="absolute top-0 left-0 w-full h-full"'
+                          )
+                        }} 
+                      />
+                    ) : (
+                      // If youtube_link is a URL, handle it the old way
+                      <iframe
+                        src={`${currentSession.youtube_link.replace('watch?v=', 'embed/')}?autoplay=1`}
+                        className="absolute top-0 left-0 w-full h-full"
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        title="Live Session"
+                      />
+                    )}
                   </div>
                 ) : (
                   <div className="bg-gray-100 dark:bg-gray-800 h-64 flex items-center justify-center">

@@ -79,6 +79,19 @@ const createAuthenticatedService = (token: string | null) => {
   
     // Helper method to convert LiveSession to PastSession format for UI
     formatAsPastSession(session: LiveSession) {
+      let videoUrl = '';
+      
+      if (session.youtube_link) {
+        if (session.youtube_link.includes('<iframe')) {
+          // Extract src URL from iframe HTML
+          const srcMatch = session.youtube_link.match(/src=["']([^"']+)["']/);
+          videoUrl = srcMatch ? srcMatch[1] : '';
+        } else {
+          // Handle regular YouTube URL
+          videoUrl = session.youtube_link.replace('watch?v=', 'embed/');
+        }
+      }
+      
       return {
         id: session.id,
         title: session.session_title,
@@ -86,7 +99,7 @@ const createAuthenticatedService = (token: string | null) => {
         duration: session.duration_minutes.toString(),
         host: session.host,
         thumbnail: `/api/placeholder/400/320`, // Placeholder image
-        videoUrl: session.youtube_link ? session.youtube_link.replace('watch?v=', 'embed/') : '',
+        videoUrl,
         viewCount: Math.floor(Math.random() * 200) + 50, // Mock view count
       };
     },
