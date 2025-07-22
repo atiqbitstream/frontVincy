@@ -15,6 +15,7 @@ const API_URL = import.meta.env.VITE_API_URL;
 const AboutEditor = () => {
   const { token } = useAuth();
   const [aboutData, setAboutData] = useState({
+    id: undefined,
     title: "",
     subtitle: "",
     image_url: "",
@@ -141,28 +142,54 @@ const AboutEditor = () => {
     
     try {
       console.log("Saving about data:", aboutData);
-      const response = await fetch(`${API_URL}/admin/about/`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(aboutData)
-      });
-
-      if (response.ok) {
-        const updatedData = await response.json();
-        console.log("About data saved:", updatedData);
-        setAboutData(updatedData);
-        toast.success("About page updated successfully");
+      
+      // Check if we have an existing about record with ID
+      if (aboutData.id) {
+        // Update existing record
+        const response = await fetch(`${API_URL}/admin/about/${aboutData.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(aboutData)
+        });
+        
+        if (response.ok) {
+          const updatedData = await response.json();
+          console.log("About data updated:", updatedData);
+          setAboutData(updatedData);
+          toast.success("About page updated successfully");
+        } else {
+          const errorText = await response.text();
+          console.error("Error response:", errorText);
+          throw new Error(`Failed to update about page: ${response.status}`);
+        }
       } else {
-        const errorText = await response.text();
-        console.error("Error response:", errorText);
-        throw new Error(`Failed to update about page: ${response.status}`);
+        // Create new record
+        const response = await fetch(`${API_URL}/admin/about/`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(aboutData)
+        });
+        
+        if (response.ok) {
+          const createdData = await response.json();
+          console.log("About data created:", createdData);
+          setAboutData(createdData);
+          toast.success("About page created successfully");
+        } else {
+          const errorText = await response.text();
+          console.error("Error response:", errorText);
+          throw new Error(`Failed to create about page: ${response.status}`);
+        }
       }
     } catch (error) {
       console.error("Error saving about data:", error);
-      toast.error("Failed to update about page");
+      toast.error("Failed to save about page");
     } finally {
       setSaving(false);
     }

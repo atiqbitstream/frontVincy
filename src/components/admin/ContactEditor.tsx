@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { Loader2 } from "lucide-react";
+import { apiGet, apiPost, apiPut, APIError } from "@/lib/api";
 
 // API base URL from environment
 const API_URL = import.meta.env.VITE_API_URL;
@@ -62,14 +63,13 @@ const ContactEditor = () => {
     try {
       console.log("Fetching contact information from API...");
       
-      const response = await fetch(`${API_URL}/admin/contact/`, {
-        headers: {
-          'Accept': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-      });
-
-      if (response.status === 404) {
+      const response = await apiGet('/admin/contact/');
+      const data: ContactInfo = await response.json();
+      
+      console.log("Fetched contact data:", data);
+      setContactData(data);
+    } catch (error) {
+      if (error instanceof APIError && error.status === 404) {
         // No contact info exists yet, use empty form
         console.log("No contact information found, using empty form");
         setContactData({
@@ -79,18 +79,13 @@ const ContactEditor = () => {
           office_hours: "",
           support_email: ""
         });
-      } else if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Error response:", errorText);
-        throw new Error(`Error: ${response.status}`);
+      } else if (error instanceof APIError && error.status === 401) {
+        // Token expired - handled by API helper
+        return;
       } else {
-        const data: ContactInfo = await response.json();
-        console.log("Fetched contact data:", data);
-        setContactData(data);
+        console.error("Failed to fetch contact information:", error);
+        toast.error("Failed to load contact information");
       }
-    } catch (error) {
-      console.error("Failed to fetch contact information:", error);
-      toast.error("Failed to load contact information");
     } finally {
       setLoading(false);
     }

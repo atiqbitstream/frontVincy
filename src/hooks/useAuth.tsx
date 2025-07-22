@@ -9,6 +9,7 @@ import React, {
 } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
+import { setGlobalLogout, isTokenExpired } from "@/lib/api";
 
 // Environment variable for API base URL
 const API_URL = import.meta.env.VITE_API_URL;
@@ -81,11 +82,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // On mount, load token & fetch user
   useEffect(() => {
+    // Set the global logout function for API helper
+    setGlobalLogout(() => logout);
+    
     const storedToken = localStorage.getItem("token");
     if (storedToken) {
+      // Check if token is expired before using it
+      if (isTokenExpired(storedToken)) {
+        console.log("Token expired on load, logging out");
+        logout(true); // Show session expired message
+        return;
+      }
+      
       setToken(storedToken);
       fetchUser(storedToken);
     }
+  }, []);
+
+  // Periodic token validation (check every 5 minutes)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const storedToken = localStorage.getItem("token");
+      if (storedToken && isTokenExpired(storedToken)) {
+        console.log("Token expired during session, logging out");
+        logout(true);
+      }
+    }, 5 * 60 * 1000); // Check every 5 minutes
+
+    return () => clearInterval(interval);
   }, []);
 
   const fetchUser = async (jwt: string): Promise<User | undefined> => {
@@ -93,7 +117,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const res = await fetch(`${API_URL}/users/me`, {
         headers: { Authorization: `Bearer ${jwt}` },
       });
+      
+      if (res.status === 401) {
+        // Token is invalid/expired
+        console.log("Token validation failed, logging out");
+        logout(true);
+        return;
+      }
+      
       if (!res.ok) {
+        console.error("Failed to fetch user:", res.status, res.statusText);
         logout();
         return;
       }
@@ -205,11 +238,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const logout = () => {
+  const logout = (showMessage: boolean = false) => {
     localStorage.removeItem("token");
     localStorage.removeItem("refresh_token");
     setToken(null);
     setUser(null);
+    
+    if (showMessage) {
+      toast.error("Your session has expired. Please log in again.", {
+        duration: 5000,
+      });
+    }
+    
     navigate("/login");
   };
 
