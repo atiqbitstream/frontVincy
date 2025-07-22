@@ -6,9 +6,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Image } from "lucide-react";
+import { Image, Loader2 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+
+// API base URL from environment
+const API_URL = import.meta.env.VITE_API_URL;
 
 const AboutEditor = () => {
+  const { token } = useAuth();
   const [aboutData, setAboutData] = useState({
     title: "",
     subtitle: "",
@@ -35,11 +40,28 @@ const AboutEditor = () => {
   // Fetch existing about data
   useEffect(() => {
     const fetchAboutData = async () => {
+      if (!token) return;
+      
       try {
-        const response = await fetch('http://127.0.0.1:8000/admin/about/');
-        if (response.ok) {
+        console.log("Fetching about data from API...");
+        const response = await fetch(`${API_URL}/admin/about/`, {
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (response.status === 404) {
+          console.log("No about data found, using empty form");
+          // Keep the empty default state
+        } else if (response.ok) {
           const data = await response.json();
+          console.log("Fetched about data:", data);
           setAboutData(data);
+        } else {
+          const errorText = await response.text();
+          console.error("Error response:", errorText);
+          throw new Error(`Error: ${response.status}`);
         }
       } catch (error) {
         console.error('Error fetching about data:', error);
@@ -50,7 +72,7 @@ const AboutEditor = () => {
     };
 
     fetchAboutData();
-  }, []);
+  }, [token]);
 
   // Parse team members from JSON string
   const getTeamMembers = () => {
@@ -110,21 +132,33 @@ const AboutEditor = () => {
   };
 
   const handleSave = async () => {
+    if (!token) {
+      toast.error("Authentication required");
+      return;
+    }
+    
     setSaving(true);
     
     try {
-      const response = await fetch('http://127.0.0.1:8000/admin/about/', {
+      console.log("Saving about data:", aboutData);
+      const response = await fetch(`${API_URL}/admin/about/`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(aboutData)
       });
 
       if (response.ok) {
+        const updatedData = await response.json();
+        console.log("About data saved:", updatedData);
+        setAboutData(updatedData);
         toast.success("About page updated successfully");
       } else {
-        throw new Error('Failed to update about page');
+        const errorText = await response.text();
+        console.error("Error response:", errorText);
+        throw new Error(`Failed to update about page: ${response.status}`);
       }
     } catch (error) {
       console.error("Error saving about data:", error);
