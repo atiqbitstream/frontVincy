@@ -1,19 +1,7 @@
 
-import { useState } from "react";
 import Navbar from "@/components/Navbar";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { toast } from "sonner";
 
 const Contact = () => {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    message: ""
-  });
-  const [submitting, setSubmitting] = useState(false);
-
   // Mock contact info
   const contactInfo = {
     email: "info@womb-wellness.com",
@@ -28,38 +16,6 @@ const Contact = () => {
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitting(true);
-    
-    // Validate form
-    if (!formData.name || !formData.email || !formData.message) {
-      toast.error("Please fill in all fields");
-      setSubmitting(false);
-      return;
-    }
-    
-    // In a real app, we would submit to an API
-    // Simulate API call
-    setTimeout(() => {
-      toast.success("Your message has been sent! We'll be in touch soon.");
-      setFormData({
-        name: "",
-        email: "",
-        message: ""
-      });
-      setSubmitting(false);
-    }, 1000);
-  };
-
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -69,55 +25,7 @@ const Contact = () => {
           <p className="text-xl text-foreground/80">Get in touch with our team</p>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          <div>
-            <h2 className="text-2xl font-semibold text-health-primary mb-6">Send Us a Message</h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label htmlFor="name" className="block text-sm font-medium text-foreground/70 mb-1">Name</label>
-                <Input
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  placeholder="Your name"
-                  required
-                />
-              </div>
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-foreground/70 mb-1">Email</label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  placeholder="your.email@example.com"
-                  required
-                />
-              </div>
-              <div>
-                <label htmlFor="message" className="block text-sm font-medium text-foreground/70 mb-1">Message</label>
-                <Textarea
-                  id="message"
-                  name="message"
-                  value={formData.message}
-                  onChange={handleInputChange}
-                  placeholder="How can we help you?"
-                  rows={6}
-                  required
-                />
-              </div>
-              <Button 
-                type="submit" 
-                className="w-full" 
-                disabled={submitting}
-              >
-                {submitting ? 'Sending...' : 'Send Message'}
-              </Button>
-            </form>
-          </div>
-          
+        <div className="max-w-2xl mx-auto">
           <div>
             <h2 className="text-2xl font-semibold text-health-primary mb-6">Our Information</h2>
             <div className="bg-card text-card-foreground rounded-lg shadow p-6 space-y-6">
