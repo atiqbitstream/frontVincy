@@ -1,20 +1,98 @@
 
+import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
+
+// API base URL from environment
+const API_URL = import.meta.env.VITE_API_URL;
+
+// TypeScript interface for contact information
+interface ContactInfo {
+  id?: string;
+  email: string;
+  phone?: string;
+  address?: string;
+  office_hours?: string;
+  support_email?: string;
+}
 
 const Contact = () => {
-  // Mock contact info
-  const contactInfo = {
-    email: "info@womb-wellness.com",
-    phone: "+1 (555) 123-4567",
-    address: "123 Wellness Avenue, Suite 500, San Francisco, CA 94103",
-    officeHours: "Monday - Friday: 9am - 5pm\nSaturday: 10am - 2pm\nSunday: Closed",
-    socialMedia: {
-      facebook: "https://facebook.com/wombwellness",
-      twitter: "https://twitter.com/wombwellness",
-      instagram: "https://instagram.com/wombwellness",
-      linkedin: "https://linkedin.com/company/wombwellness"
-    }
-  };
+  const [contactInfo, setContactInfo] = useState<ContactInfo | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch contact information on component mount
+  useEffect(() => {
+    const fetchContactInfo = async () => {
+      setLoading(true);
+      try {
+        // Use public endpoint for contact information
+        const response = await fetch(`${API_URL}/public/contact/`, {
+          headers: {
+            'Accept': 'application/json',
+          },
+        });
+
+        if (response.status === 404) {
+          // No contact info exists, use default mock data
+          console.log("No contact information found, using default data");
+          setContactInfo({
+            email: "info@womb-wellness.com",
+            phone: "+1 (555) 123-4567",
+            address: "123 Wellness Avenue, Suite 500, San Francisco, CA 94103",
+            office_hours: "Monday - Friday: 9am - 5pm\nSaturday: 10am - 2pm\nSunday: Closed",
+            support_email: "support@womb-wellness.com"
+          });
+        } else if (!response.ok) {
+          throw new Error(`Error: ${response.status}`);
+        } else {
+          const data: ContactInfo = await response.json();
+          console.log("Fetched contact data:", data);
+          setContactInfo(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch contact information:", error);
+        // Use default mock data as fallback
+        setContactInfo({
+          email: "info@womb-wellness.com",
+          phone: "+1 (555) 123-4567",
+          address: "123 Wellness Avenue, Suite 500, San Francisco, CA 94103",
+          office_hours: "Monday - Friday: 9am - 5pm\nSaturday: 10am - 2pm\nSunday: Closed",
+          support_email: "support@womb-wellness.com"
+        });
+        toast.warning("Using default contact information - API connection issue");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchContactInfo();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-health-primary" />
+          <span className="ml-2">Loading contact information...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!contactInfo) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="container mx-auto px-4 py-12">
+          <div className="text-center">
+            <p className="text-gray-500">Contact information is not available at the moment.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -38,29 +116,46 @@ const Contact = () => {
                       {contactInfo.email}
                     </a>
                   </p>
-                  <p className="flex items-start">
-                    <span className="font-medium mr-2 text-foreground/70">Phone:</span>
-                    <a href={`tel:${contactInfo.phone.replace(/\D/g, '')}`} className="text-health-primary hover:underline">
-                      {contactInfo.phone}
-                    </a>
-                  </p>
-                  <div className="flex items-start">
-                    <span className="font-medium mr-2 text-foreground/70">Address:</span>
-                    <span className="text-foreground/70">{contactInfo.address}</span>
-                  </div>
+                  
+                  {contactInfo.phone && (
+                    <p className="flex items-start">
+                      <span className="font-medium mr-2 text-foreground/70">Phone:</span>
+                      <a href={`tel:${contactInfo.phone.replace(/\D/g, '')}`} className="text-health-primary hover:underline">
+                        {contactInfo.phone}
+                      </a>
+                    </p>
+                  )}
+                  
+                  {contactInfo.address && (
+                    <div className="flex items-start">
+                      <span className="font-medium mr-2 text-foreground/70">Address:</span>
+                      <span className="text-foreground/70">{contactInfo.address}</span>
+                    </div>
+                  )}
+                  
+                  {contactInfo.support_email && (
+                    <p className="flex items-start">
+                      <span className="font-medium mr-2 text-foreground/70">Support:</span>
+                      <a href={`mailto:${contactInfo.support_email}`} className="text-health-primary hover:underline">
+                        {contactInfo.support_email}
+                      </a>
+                    </p>
+                  )}
                 </div>
               </div>
               
-              <div>
-                <h3 className="font-medium text-lg mb-2">Office Hours</h3>
-                <p className="whitespace-pre-line text-foreground/70">{contactInfo.officeHours}</p>
-              </div>
+              {contactInfo.office_hours && (
+                <div>
+                  <h3 className="font-medium text-lg mb-2">Office Hours</h3>
+                  <p className="whitespace-pre-line text-foreground/70">{contactInfo.office_hours}</p>
+                </div>
+              )}
               
               <div>
                 <h3 className="font-medium text-lg mb-2">Connect With Us</h3>
                 <div className="flex space-x-4">
                   <a 
-                    href={contactInfo.socialMedia.facebook} 
+                    href="https://facebook.com/wombwellness" 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700"
@@ -70,7 +165,7 @@ const Contact = () => {
                     </svg>
                   </a>
                   <a 
-                    href={contactInfo.socialMedia.twitter} 
+                    href="https://twitter.com/wombwellness" 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="p-2 bg-blue-400 text-white rounded-full hover:bg-blue-500"
@@ -80,7 +175,7 @@ const Contact = () => {
                     </svg>
                   </a>
                   <a 
-                    href={contactInfo.socialMedia.instagram} 
+                    href="https://instagram.com/wombwellness" 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="p-2 bg-pink-600 text-white rounded-full hover:bg-pink-700"
@@ -90,7 +185,7 @@ const Contact = () => {
                     </svg>
                   </a>
                   <a 
-                    href={contactInfo.socialMedia.linkedin} 
+                    href="https://linkedin.com/company/wombwellness" 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="p-2 bg-blue-700 text-white rounded-full hover:bg-blue-800"
