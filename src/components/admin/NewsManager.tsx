@@ -9,8 +9,10 @@ import {
   DialogTitle, 
   DialogFooter 
 } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Pencil, Plus, Trash2, Loader2 } from "lucide-react";
+import { Pencil, Plus, Trash2, Loader2, Image, Upload } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth"; // Import useAuth to access token
 
 // API base URL from environment
@@ -84,6 +86,8 @@ const NewsManager = () => {
   const [currentNews, setCurrentNews] = useState<NewsItem | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [imageUploadType, setImageUploadType] = useState<"url" | "file">("url");
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [formData, setFormData] = useState<NewsCreatePayload>({
     title: "",
     summary: "",
@@ -151,6 +155,45 @@ const NewsManager = () => {
       ...prev,
       [field]: value
     }));
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingImage(true);
+
+    try {
+      // Create FormData for file upload
+      const formData = new FormData();
+      formData.append('file', file);
+
+      // Upload file to backend
+      const response = await fetch(`${API_URL}/admin/upload/image`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload image');
+      }
+
+      const result = await response.json();
+      
+      // Use the full URL path returned from backend
+      const imageUrl = `${API_URL}${result.file_url}`;
+      handleInputChange('image_url', imageUrl);
+      
+      toast.success('Image uploaded successfully');
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast.error('Failed to upload image');
+    } finally {
+      setUploadingImage(false);
+    }
   };
 
   const handleAddNews = () => {
@@ -439,12 +482,69 @@ const NewsManager = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Image URL</label>
-              <Input 
-                value={formData.image_url} 
-                onChange={(e) => handleInputChange('image_url', e.target.value)}
-                placeholder="https://example.com/image.jpg"
-              />
+              <label className="block text-sm font-medium mb-1">Image</label>
+              <Tabs defaultValue={imageUploadType} onValueChange={(val) => setImageUploadType(val as "url" | "file")}>
+                <TabsList className="mb-4">
+                  <TabsTrigger value="url">URL</TabsTrigger>
+                  <TabsTrigger value="file">Upload</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="url">
+                  <Input 
+                    value={formData.image_url} 
+                    onChange={(e) => handleInputChange('image_url', e.target.value)}
+                    placeholder="https://example.com/image.jpg"
+                  />
+                </TabsContent>
+                
+                <TabsContent value="file">
+                  <div className="mt-2">
+                    <div className="flex items-center justify-center w-full">
+                      <label htmlFor="image-upload" className="cursor-pointer w-full">
+                        <div className={`border-2 border-dashed rounded-lg flex flex-col items-center justify-center h-32 ${uploadingImage ? 'border-health-primary' : 'border-gray-300 hover:border-health-primary'}`}>
+                          {uploadingImage ? (
+                            <div className="text-center">
+                              <Loader2 className="h-8 w-8 animate-spin text-health-primary mx-auto mb-2" />
+                              <p className="text-sm text-gray-500">Uploading...</p>
+                            </div>
+                          ) : (
+                            <div className="text-center">
+                              <div className="flex justify-center mb-2">
+                                <Image className="w-6 h-6 text-gray-400" />
+                              </div>
+                              <p className="text-sm text-gray-500">Click to upload or drag and drop</p>
+                              <p className="text-xs text-gray-400 mt-1">PNG, JPG, GIF up to 5MB</p>
+                            </div>
+                          )}
+                        </div>
+                        <input
+                          id="image-upload"
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleFileUpload}
+                          disabled={uploadingImage}
+                        />
+                      </label>
+                    </div>
+                  </div>
+                </TabsContent>
+              </Tabs>
+              
+              {formData.image_url && (
+                <div className="mt-2">
+                  <div className="relative h-32 rounded-md overflow-hidden">
+                    <img 
+                      src={formData.image_url} 
+                      alt="Preview" 
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute bottom-0 left-0 right-0 bg-black/40 text-white px-2 py-1 text-xs">
+                      Preview
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Publish Date</label>
@@ -504,11 +604,69 @@ const NewsManager = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Image URL</label>
-              <Input 
-                value={formData.image_url} 
-                onChange={(e) => handleInputChange('image_url', e.target.value)}
-              />
+              <label className="block text-sm font-medium mb-1">Image</label>
+              <Tabs defaultValue={imageUploadType} onValueChange={(val) => setImageUploadType(val as "url" | "file")}>
+                <TabsList className="mb-4">
+                  <TabsTrigger value="url">URL</TabsTrigger>
+                  <TabsTrigger value="file">Upload</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="url">
+                  <Input 
+                    value={formData.image_url} 
+                    onChange={(e) => handleInputChange('image_url', e.target.value)}
+                    placeholder="https://example.com/image.jpg"
+                  />
+                </TabsContent>
+                
+                <TabsContent value="file">
+                  <div className="mt-2">
+                    <div className="flex items-center justify-center w-full">
+                      <label htmlFor="edit-image-upload" className="cursor-pointer w-full">
+                        <div className={`border-2 border-dashed rounded-lg flex flex-col items-center justify-center h-32 ${uploadingImage ? 'border-health-primary' : 'border-gray-300 hover:border-health-primary'}`}>
+                          {uploadingImage ? (
+                            <div className="text-center">
+                              <Loader2 className="h-8 w-8 animate-spin text-health-primary mx-auto mb-2" />
+                              <p className="text-sm text-gray-500">Uploading...</p>
+                            </div>
+                          ) : (
+                            <div className="text-center">
+                              <div className="flex justify-center mb-2">
+                                <Image className="w-6 h-6 text-gray-400" />
+                              </div>
+                              <p className="text-sm text-gray-500">Click to upload or drag and drop</p>
+                              <p className="text-xs text-gray-400 mt-1">PNG, JPG, GIF up to 5MB</p>
+                            </div>
+                          )}
+                        </div>
+                        <input
+                          id="edit-image-upload"
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleFileUpload}
+                          disabled={uploadingImage}
+                        />
+                      </label>
+                    </div>
+                  </div>
+                </TabsContent>
+              </Tabs>
+              
+              {formData.image_url && (
+                <div className="mt-2">
+                  <div className="relative h-32 rounded-md overflow-hidden">
+                    <img 
+                      src={formData.image_url} 
+                      alt="Preview" 
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute bottom-0 left-0 right-0 bg-black/40 text-white px-2 py-1 text-xs">
+                      Preview
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Publish Date</label>

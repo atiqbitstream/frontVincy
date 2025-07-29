@@ -115,21 +115,43 @@ const AboutEditor = () => {
     }));
   };
 
-  const handleFileUpload = (imageType: 'image_url' | 'image_url_2', e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (imageType: 'image_url' | 'image_url_2', e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setUploadingImage(true);
 
-    // In a real app, this would be an actual file upload to a storage service
-    // Here we're simulating the upload with a timeout
-    setTimeout(() => {
-      // Create a URL for the selected file to preview (in a real app, this would be the uploaded file URL)
-      const imageUrl = URL.createObjectURL(file);
+    try {
+      // Create FormData for file upload
+      const formData = new FormData();
+      formData.append('file', file);
+
+      // Upload file to backend
+      const response = await fetch(`${API_URL}/admin/upload/image`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload image');
+      }
+
+      const result = await response.json();
+      
+      // Use the full URL path returned from backend
+      const imageUrl = `${API_URL}${result.file_url}`;
       handleImageChange(imageType, imageUrl);
-      setUploadingImage(false);
+      
       toast.success(`${imageType === 'image_url' ? 'Hero' : 'Vision'} image uploaded successfully`);
-    }, 1500);
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast.error('Failed to upload image');
+    } finally {
+      setUploadingImage(false);
+    }
   };
 
   const handleSave = async () => {
