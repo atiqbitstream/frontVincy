@@ -4,6 +4,8 @@ import { ArrowRight, Play, Heart, Brain, Calendar, Mail, Phone, MapPin, Clock } 
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 const Landing = () => {
   // State for API data
   const [newsData, setNewsData] = useState([]);
@@ -16,7 +18,7 @@ const Landing = () => {
   useEffect(() => {
     const fetchNews = async () => {
       try {
-        const response = await fetch('http://127.0.0.1:8000/public/latest-news');
+        const response = await fetch(`${API_URL}/public/latest-news`);
         const data = await response.json();
         setNewsData(data);
       } catch (error) {
@@ -26,7 +28,7 @@ const Landing = () => {
 
     const fetchLiveSession = async () => {
       try {
-        const response = await fetch('http://127.0.0.1:8000/public/latest-live-session');
+        const response = await fetch(`${API_URL}/public/latest-live-session`);
         const data = await response.json();
         setLiveSessionData(data);
       } catch (error) {
@@ -36,7 +38,7 @@ const Landing = () => {
 
     const fetchAbout = async () => {
       try {
-        const response = await fetch('http://127.0.0.1:8000/public/about');
+        const response = await fetch(`${API_URL}/public/about`);
         const data = await response.json();
         setAboutData(data);
       } catch (error) {
@@ -46,7 +48,7 @@ const Landing = () => {
 
     const fetchContact = async () => {
       try {
-        const response = await fetch('http://127.0.0.1:8000/public/contact');
+        const response = await fetch(`${API_URL}/public/contact`);
         const data = await response.json();
         setContactData(data);
       } catch (error) {
@@ -128,18 +130,23 @@ const Landing = () => {
                     {aboutData?.title || "About W.O.M.B"}
                   </h3>
                   <p className="text-muted-foreground leading-relaxed">
-                    {aboutData?.description || "We are dedicated to revolutionizing healthcare through cutting-edge wellness technology."}
+                    {aboutData?.subtitle || aboutData?.description || "We are dedicated to revolutionizing healthcare through cutting-edge wellness technology."}
                   </p>
-                  {aboutData?.mission && (
+                  {aboutData?.content && (
+                    <p className="text-muted-foreground leading-relaxed">
+                      {aboutData.content}
+                    </p>
+                  )}
+                  {(aboutData?.heading && aboutData?.content) && (
                     <div className="bg-[hsl(var(--health-primary))]/5 p-4 rounded-lg">
-                      <h4 className="font-semibold text-[hsl(var(--health-primary))] mb-2">Our Mission</h4>
-                      <p className="text-sm text-muted-foreground">{aboutData.mission}</p>
+                      <h4 className="font-semibold text-[hsl(var(--health-primary))] mb-2">{aboutData.heading}</h4>
+                      <p className="text-sm text-muted-foreground">{aboutData.content}</p>
                     </div>
                   )}
-                  {aboutData?.vision && (
+                  {(aboutData?.heading_2 && aboutData?.content_2) && (
                     <div className="bg-[hsl(var(--health-primary))]/5 p-4 rounded-lg">
-                      <h4 className="font-semibold text-[hsl(var(--health-primary))] mb-2">Our Vision</h4>
-                      <p className="text-sm text-muted-foreground">{aboutData.vision}</p>
+                      <h4 className="font-semibold text-[hsl(var(--health-primary))] mb-2">{aboutData.heading_2}</h4>
+                      <p className="text-sm text-muted-foreground">{aboutData.content_2}</p>
                     </div>
                   )}
                 </div>
@@ -147,8 +154,8 @@ const Landing = () => {
                 <Card className="overflow-hidden">
                   <CardContent className="p-0">
                     <img 
-                      src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158" 
-                      alt="Healthcare Technology" 
+                      src={aboutData?.image_url || "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158"} 
+                      alt={aboutData?.title || "Healthcare Technology"} 
                       className="w-full h-80 object-cover"
                     />
                   </CardContent>
