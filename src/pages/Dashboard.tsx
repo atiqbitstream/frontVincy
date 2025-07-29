@@ -56,13 +56,12 @@ const Dashboard = () => {
   });
   const [isLoadingDevices, setIsLoadingDevices] = useState(true);
 
-  // Fetch all device states on mount
+  // Fetch all device states on mount and set up polling
   useEffect(() => {
     const fetchLatestDeviceStates = async () => {
       if (!user || !token) return;
 
       try {
-        setIsLoadingDevices(true);
         const response = await fetch(`${API_URL}/device-controls/latest`, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -82,14 +81,28 @@ const Dashboard = () => {
         setDeviceStates(data);
       } catch (error) {
         console.error("Error loading device states:", error);
-        toast.error("Failed to load device states");
+        // Only show toast error on initial load, not during polling
+        if (isLoadingDevices) {
+          toast.error("Failed to load device states");
+        }
       } finally {
         setIsLoadingDevices(false);
       }
     };
 
+    // Initial fetch
     fetchLatestDeviceStates();
-  }, [user, token]);
+
+    // Set up polling every 3 seconds
+    const pollInterval = setInterval(() => {
+      fetchLatestDeviceStates();
+    }, 3000);
+
+    // Cleanup interval on unmount
+    return () => {
+      clearInterval(pollInterval);
+    };
+  }, [user, token, isLoadingDevices]);
 
   const handleViewHistory = (title: string, endpoint: string) => {
     setModalData({
