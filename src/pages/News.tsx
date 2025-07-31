@@ -8,8 +8,8 @@ interface NewsItem {
   title: string;
   summary: string;
   content: string;
-  image: string;
-  publishDate: string;
+  image_url: string;
+  publish_date: string;
 }
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -82,14 +82,14 @@ const News = () => {
 
             <div className="bg-card text-card-foreground rounded-lg shadow overflow-hidden">
               <img
-                src={selectedNews.image}
+                src={`${selectedNews.image_url}?t=${Date.now()}`}
                 alt={selectedNews.title}
                 className="w-full h-64 object-cover"
               />
               <div className="p-6">
                 <h1 className="text-2xl font-bold mb-2">{selectedNews.title}</h1>
                 <p className="text-sm text-foreground/60 mb-4">
-                  Published: {new Date(selectedNews.publishDate).toLocaleDateString()}
+                  Published: {new Date(selectedNews.publish_date).toLocaleDateString()}
                 </p>
                 <p className="font-medium mb-4 text-foreground/80">{selectedNews.summary}</p>
                 <div className="prose max-w-none text-foreground/70">
@@ -112,14 +112,14 @@ const News = () => {
                   className="bg-card text-card-foreground rounded-lg shadow overflow-hidden"
                 >
                   <img
-                    src={news.image}
+                    src={`${news.image_url}?t=${Date.now()}`}
                     alt={news.title}
                     className="w-full h-48 object-cover"
                   />
                   <div className="p-4">
                     <h2 className="font-bold text-lg mb-2">{news.title}</h2>
                     <p className="text-foreground/60 text-sm mb-2">
-                      Published: {new Date(news.publishDate).toLocaleDateString()}
+                      Published: {new Date(news.publish_date).toLocaleDateString()}
                     </p>
                     <p className="text-foreground/70 mb-4">{news.summary}</p>
                     <button
