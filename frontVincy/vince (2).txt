@@ -1,0 +1,999 @@
+--
+-- PostgreSQL database dump
+--
+
+-- Dumped from database version 17.5
+-- Dumped by pg_dump version 17.4
+
+-- Started on 2025-07-30 18:05:13
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET transaction_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+--
+-- TOC entry 875 (class 1247 OID 16440)
+-- Name: alcoholconsumption; Type: TYPE; Schema: public; Owner: postgres
+--
+
+CREATE TYPE public.alcoholconsumption AS ENUM (
+    'never',
+    'rarely',
+    'sometimes',
+    'regularly',
+    'frequently'
+);
+
+
+ALTER TYPE public.alcoholconsumption OWNER TO postgres;
+
+--
+-- TOC entry 869 (class 1247 OID 16418)
+-- Name: exercisefrequency; Type: TYPE; Schema: public; Owner: postgres
+--
+
+CREATE TYPE public.exercisefrequency AS ENUM (
+    'never',
+    'rarely',
+    'sometimes',
+    'regularly',
+    'daily'
+);
+
+
+ALTER TYPE public.exercisefrequency OWNER TO postgres;
+
+--
+-- TOC entry 863 (class 1247 OID 16396)
+-- Name: gender; Type: TYPE; Schema: public; Owner: postgres
+--
+
+CREATE TYPE public.gender AS ENUM (
+    'male',
+    'female',
+    'other',
+    'prefer_not_to_say'
+);
+
+
+ALTER TYPE public.gender OWNER TO postgres;
+
+--
+-- TOC entry 866 (class 1247 OID 16406)
+-- Name: maritalstatus; Type: TYPE; Schema: public; Owner: postgres
+--
+
+CREATE TYPE public.maritalstatus AS ENUM (
+    'single',
+    'married',
+    'divorced',
+    'widowed',
+    'separated'
+);
+
+
+ALTER TYPE public.maritalstatus OWNER TO postgres;
+
+--
+-- TOC entry 872 (class 1247 OID 16430)
+-- Name: smokingstatus; Type: TYPE; Schema: public; Owner: postgres
+--
+
+CREATE TYPE public.smokingstatus AS ENUM (
+    'non_smoker',
+    'former_smoker',
+    'occasional_smoker',
+    'regular_smoker'
+);
+
+
+ALTER TYPE public.smokingstatus OWNER TO postgres;
+
+--
+-- TOC entry 860 (class 1247 OID 16391)
+-- Name: userrole; Type: TYPE; Schema: public; Owner: postgres
+--
+
+CREATE TYPE public.userrole AS ENUM (
+    'Admin',
+    'User'
+);
+
+
+ALTER TYPE public.userrole OWNER TO postgres;
+
+--
+-- TOC entry 878 (class 1247 OID 16452)
+-- Name: userstatus; Type: TYPE; Schema: public; Owner: postgres
+--
+
+CREATE TYPE public.userstatus AS ENUM (
+    'active',
+    'inactive',
+    'pending'
+);
+
+
+ALTER TYPE public.userstatus OWNER TO postgres;
+
+SET default_tablespace = '';
+
+SET default_table_access_method = heap;
+
+--
+-- TOC entry 231 (class 1259 OID 17375)
+-- Name: about; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.about (
+    id uuid NOT NULL,
+    title character varying(255) NOT NULL,
+    mission text,
+    vision text,
+    description text NOT NULL,
+    team_info text,
+    company_history text,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone,
+    subtitle character varying(500),
+    image_url character varying(500),
+    heading character varying(255),
+    content text,
+    heading_2 character varying(255),
+    content_2 text,
+    image_url_2 character varying(500),
+    team_members text
+);
+
+
+ALTER TABLE public.about OWNER TO postgres;
+
+--
+-- TOC entry 226 (class 1259 OID 16569)
+-- Name: biofeedbacks; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.biofeedbacks (
+    id uuid NOT NULL,
+    heart_rate double precision,
+    heart_rate_variability double precision,
+    electromyography double precision,
+    electrodermal_activity double precision,
+    respiration_rate double precision,
+    blood_pressure double precision,
+    temperature double precision,
+    brainwave_activity double precision,
+    oxygen_saturation double precision,
+    blood_glucose_levels double precision,
+    galvanic_skin_response double precision,
+    user_email character varying NOT NULL,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone,
+    created_by character varying,
+    updated_by character varying
+);
+
+
+ALTER TABLE public.biofeedbacks OWNER TO postgres;
+
+--
+-- TOC entry 228 (class 1259 OID 16597)
+-- Name: brain_monitorings; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.brain_monitorings (
+    id uuid NOT NULL,
+    alpha_waves double precision,
+    theta_waves double precision,
+    beta_waves double precision,
+    gamma_waves double precision,
+    heart_rate double precision,
+    heart_rate_variability double precision,
+    electromyography double precision,
+    respiration_rate double precision,
+    electrodermal_activity double precision,
+    peripheral_skin_temperature double precision,
+    user_email character varying NOT NULL,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone,
+    created_by character varying,
+    updated_by character varying
+);
+
+
+ALTER TABLE public.brain_monitorings OWNER TO postgres;
+
+--
+-- TOC entry 227 (class 1259 OID 16583)
+-- Name: burn_progresses; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.burn_progresses (
+    id uuid NOT NULL,
+    wound_size_depth double precision,
+    epithelialization double precision,
+    exudate_amount_type double precision,
+    infection_indicators double precision,
+    granulation_tissue double precision,
+    pain_levels double precision,
+    swelling_edema double precision,
+    scarring double precision,
+    functional_recovery double precision,
+    color_changes double precision,
+    temperature_wound_site double precision,
+    blood_flow_perfusion double precision,
+    nutritional_status double precision,
+    systemic_indicators double precision,
+    user_email character varying NOT NULL,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone,
+    created_by character varying,
+    updated_by character varying
+);
+
+
+ALTER TABLE public.burn_progresses OWNER TO postgres;
+
+--
+-- TOC entry 230 (class 1259 OID 17367)
+-- Name: contact; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.contact (
+    id uuid NOT NULL,
+    email character varying(255) NOT NULL,
+    phone character varying(20),
+    address text,
+    office_hours character varying(255),
+    support_email character varying(255),
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone
+);
+
+
+ALTER TABLE public.contact OWNER TO postgres;
+
+--
+-- TOC entry 229 (class 1259 OID 16611)
+-- Name: heart_brain_synchronicities; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.heart_brain_synchronicities (
+    id uuid NOT NULL,
+    heart_rate_variability double precision,
+    alpha_waves double precision,
+    respiratory_sinus_arrhythmia double precision,
+    coherence_ratio double precision,
+    brainwave_coherence double precision,
+    blood_pressure_variability double precision,
+    electrodermal_activity double precision,
+    breathing_patterns double precision,
+    subjective_measures double precision,
+    user_email character varying NOT NULL,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone,
+    created_by character varying,
+    updated_by character varying
+);
+
+
+ALTER TABLE public.heart_brain_synchronicities OWNER TO postgres;
+
+--
+-- TOC entry 225 (class 1259 OID 16555)
+-- Name: led_colors; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.led_colors (
+    id uuid NOT NULL,
+    led_color character varying NOT NULL,
+    user_email character varying NOT NULL,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone,
+    created_by character varying,
+    updated_by character varying
+);
+
+
+ALTER TABLE public.led_colors OWNER TO postgres;
+
+--
+-- TOC entry 218 (class 1259 OID 16469)
+-- Name: live_session; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.live_session (
+    id uuid NOT NULL,
+    session_title character varying(255) NOT NULL,
+    host character varying(255) NOT NULL,
+    description text,
+    date_time timestamp without time zone NOT NULL,
+    duration_minutes integer NOT NULL,
+    youtube_link character varying(500),
+    livestatus boolean NOT NULL,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone
+);
+
+
+ALTER TABLE public.live_session OWNER TO postgres;
+
+--
+-- TOC entry 224 (class 1259 OID 16541)
+-- Name: nano_flickers; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.nano_flickers (
+    id uuid NOT NULL,
+    nano_flicker boolean NOT NULL,
+    user_email character varying NOT NULL,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone,
+    created_by character varying,
+    updated_by character varying
+);
+
+
+ALTER TABLE public.nano_flickers OWNER TO postgres;
+
+--
+-- TOC entry 219 (class 1259 OID 16477)
+-- Name: news; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.news (
+    id uuid NOT NULL,
+    title character varying(255) NOT NULL,
+    summary character varying(500) NOT NULL,
+    content text NOT NULL,
+    image_url character varying(500),
+    publish_date date NOT NULL,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone
+);
+
+
+ALTER TABLE public.news OWNER TO postgres;
+
+--
+-- TOC entry 220 (class 1259 OID 16485)
+-- Name: sounds; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.sounds (
+    id uuid NOT NULL,
+    sound boolean NOT NULL,
+    user_email character varying NOT NULL,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone,
+    created_by character varying,
+    updated_by character varying
+);
+
+
+ALTER TABLE public.sounds OWNER TO postgres;
+
+--
+-- TOC entry 221 (class 1259 OID 16499)
+-- Name: steams; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.steams (
+    id uuid NOT NULL,
+    steam boolean NOT NULL,
+    user_email character varying NOT NULL,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone,
+    created_by character varying,
+    updated_by character varying
+);
+
+
+ALTER TABLE public.steams OWNER TO postgres;
+
+--
+-- TOC entry 222 (class 1259 OID 16513)
+-- Name: temp_tanks; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.temp_tanks (
+    id uuid NOT NULL,
+    temp_tank double precision NOT NULL,
+    user_email character varying NOT NULL,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone,
+    created_by character varying,
+    updated_by character varying
+);
+
+
+ALTER TABLE public.temp_tanks OWNER TO postgres;
+
+--
+-- TOC entry 217 (class 1259 OID 16459)
+-- Name: users; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.users (
+    id uuid NOT NULL,
+    email character varying NOT NULL,
+    password_hash character varying NOT NULL,
+    role public.userrole,
+    full_name character varying,
+    gender public.gender,
+    dob date,
+    nationality character varying,
+    phone character varying,
+    city character varying,
+    country character varying,
+    occupation character varying,
+    marital_status public.maritalstatus,
+    sleep_hours double precision,
+    exercise_frequency public.exercisefrequency,
+    smoking_status public.smokingstatus,
+    alcohol_consumption public.alcoholconsumption,
+    user_status public.userstatus,
+    refresh_token character varying,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone,
+    created_by character varying,
+    updated_by character varying
+);
+
+
+ALTER TABLE public.users OWNER TO postgres;
+
+--
+-- TOC entry 223 (class 1259 OID 16527)
+-- Name: water_pumps; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.water_pumps (
+    id uuid NOT NULL,
+    water_pump boolean NOT NULL,
+    user_email character varying NOT NULL,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone,
+    created_by character varying,
+    updated_by character varying
+);
+
+
+ALTER TABLE public.water_pumps OWNER TO postgres;
+
+--
+-- TOC entry 5044 (class 0 OID 17375)
+-- Dependencies: 231
+-- Data for Name: about; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.about (id, title, mission, vision, description, team_info, company_history, created_at, updated_at, subtitle, image_url, heading, content, heading_2, content_2, image_url_2, team_members) FROM stdin;
+0c6ab234-3d83-420e-8b54-05c7dc9c99ca	string	string	string	string	string	string	2025-07-18 06:57:32.341076-07	\N	\N	\N	\N	\N	\N	\N	\N	\N
+784a15d0-f8ee-48e4-bd09-de1101340c80	About W.O.M.Bgfgfg	Our Mission	Our Vision	About W.O.M.B is a wellness technology company focused on integrating adddfdgvvanced therapeutic systems into modern healthcare to improve patient outcomes.	Our team consists of medical professionals and technology experts committed to advancing remote therapeugdfgbdftic care.	Founded in 2020, W.O.M.B has been at the forefront of remote therapeutic innovation in healthcare.fvbdfdb	2025-07-18 07:24:53.760539-07	2025-07-29 10:59:33.428605-07	Wellness Optimal Mind Body Healthbhfghfhnf	http://localhost:8000/uploads/6f4a6f84-99e1-41d5-8b0c-7e570f76fad8.jpeg	Our Mission jhjh	At W.O.M.B (Wellness Optimal Mind Body), we are dedicated to revolutionizing the way healthcare professionals deliver therapeutic treatments. Our platform bridges the gap between cutting-edge wellness technology and healthcare providers, creating seamless integrations that improve patient outcomes.\n\nFounded in 2020, our team of medical professionals and technology experts has developed a comprehensive system for monitoring and controlling therapeutic devices remotely, allowing for more precise and personalized treatment plans.hghgfhfg	Our Visionghfghf	We envision a future where healthcare professionals can provide optimal care without limitations of physical presence, where therapeutic devices work in harmony to create personalized healing environments, and where patients receive the highest standard of care through technological innovation.fbhfgvbh	http://localhost:8000/uploads/a963941b-e9c0-4e97-a58e-31858ea80998.png	[{"id":"1753193787363","name":"Atiq Ur Rehman","role":"Software Engineer","bio":"non"}]
+\.
+
+
+--
+-- TOC entry 5039 (class 0 OID 16569)
+-- Dependencies: 226
+-- Data for Name: biofeedbacks; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.biofeedbacks (id, heart_rate, heart_rate_variability, electromyography, electrodermal_activity, respiration_rate, blood_pressure, temperature, brainwave_activity, oxygen_saturation, blood_glucose_levels, galvanic_skin_response, user_email, created_at, updated_at, created_by, updated_by) FROM stdin;
+103aadba-af2a-4d5b-bde2-e1b11e33e007	84	83	80	4	66	75	39	17	97	9	6	user@example.com	2025-06-01 07:40:47.701575-07	2025-06-01 07:41:37.740732-07	user@example.com	user@example.com
+\.
+
+
+--
+-- TOC entry 5041 (class 0 OID 16597)
+-- Dependencies: 228
+-- Data for Name: brain_monitorings; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.brain_monitorings (id, alpha_waves, theta_waves, beta_waves, gamma_waves, heart_rate, heart_rate_variability, electromyography, respiration_rate, electrodermal_activity, peripheral_skin_temperature, user_email, created_at, updated_at, created_by, updated_by) FROM stdin;
+717054aa-d46a-47bf-aac8-c6456e85b769	5	33	63	42	10	2	51	59	63	86	user@example.com	2025-06-01 07:40:51.505133-07	\N	user@example.com	\N
+\.
+
+
+--
+-- TOC entry 5040 (class 0 OID 16583)
+-- Dependencies: 227
+-- Data for Name: burn_progresses; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.burn_progresses (id, wound_size_depth, epithelialization, exudate_amount_type, infection_indicators, granulation_tissue, pain_levels, swelling_edema, scarring, functional_recovery, color_changes, temperature_wound_site, blood_flow_perfusion, nutritional_status, systemic_indicators, user_email, created_at, updated_at, created_by, updated_by) FROM stdin;
+f88329b0-0617-4ea5-ab43-e32c24695616	15	69	19	19	73	14	11	90	43	34	55	67	60	52	user@example.com	2025-06-01 07:40:48.651626-07	\N	user@example.com	\N
+\.
+
+
+--
+-- TOC entry 5043 (class 0 OID 17367)
+-- Dependencies: 230
+-- Data for Name: contact; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.contact (id, email, phone, address, office_hours, support_email, created_at, updated_at) FROM stdin;
+3d57c013-32a6-44b1-9007-3494a490cc91	contact@oakandpinecreative.com	+101-326-507	1234 Maplewood Lane\nSpringfield, CA 90210\nUSA	Monday – Friday: 9:00 AM – 5:30 PM\nSaturday: 10:00 AM – 2:00 PM\nSunday: Closed	support@mapletechsolutions.com	2025-07-18 06:54:19.235474-07	2025-07-22 07:00:16.688993-07
+\.
+
+
+--
+-- TOC entry 5042 (class 0 OID 16611)
+-- Dependencies: 229
+-- Data for Name: heart_brain_synchronicities; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.heart_brain_synchronicities (id, heart_rate_variability, alpha_waves, respiratory_sinus_arrhythmia, coherence_ratio, brainwave_coherence, blood_pressure_variability, electrodermal_activity, breathing_patterns, subjective_measures, user_email, created_at, updated_at, created_by, updated_by) FROM stdin;
+f144fa20-2827-43b4-a154-f3e90d57551e	33	55	20	100	40	22	1	87	96	user@example.com	2025-06-01 07:40:52.430996-07	\N	user@example.com	\N
+\.
+
+
+--
+-- TOC entry 5038 (class 0 OID 16555)
+-- Dependencies: 225
+-- Data for Name: led_colors; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.led_colors (id, led_color, user_email, created_at, updated_at, created_by, updated_by) FROM stdin;
+c552bd60-2e96-4133-90a6-7d98176fb740	blue	user@example.com	2025-05-21 07:07:00.515236-07	\N	user@example.com	\N
+5af622ba-4722-435d-85b6-39e90ef7b70e	red	user@example.com	2025-05-21 07:07:02.005183-07	\N	user@example.com	\N
+c6a3edf3-42d9-431d-aad7-c156674b1635	purple	user@example.com	2025-05-21 07:07:03.564379-07	\N	user@example.com	\N
+f5444b41-97cc-43e5-a8ae-8a0d49723927	blue	user@example.com	2025-06-01 09:21:38.168057-07	\N	user@example.com	\N
+061814f6-70b2-4c8a-bd25-4a632a7ec7af	yellow	user@example.com	2025-06-01 09:21:48.676401-07	\N	user@example.com	\N
+87583d5f-aad3-418c-bce6-38502c6b3b4a	blue	user@example.com	2025-07-29 08:30:54.376726-07	\N	user@example.com	\N
+\.
+
+
+--
+-- TOC entry 5031 (class 0 OID 16469)
+-- Dependencies: 218
+-- Data for Name: live_session; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.live_session (id, session_title, host, description, date_time, duration_minutes, youtube_link, livestatus, created_at, updated_at) FROM stdin;
+2afd4ea2-ed50-4ca3-9ebb-6d54a8c7bc46	New Live Session 2	lijuhipuhpiuhp9ujho9jhik	ujniknijniojnoinoiuo9	2025-05-22 12:00:00	60	iojnoijnoijoijoijoijoijoij	t	2025-05-21 08:30:19.816382-07	2025-06-01 09:30:11.765698-07
+6ca7e3e5-6b51-4fb6-b532-22656d8c1525	New Live Session	kijbhuiyhgouigh	jhboujhbouiyhbiubyhuibyh	2025-05-22 12:00:00	60	https://youtu.be/mHONNcZbwDY?feature=shared	f	2025-05-21 08:29:55.470369-07	2025-06-01 09:40:56.678517-07
+247983ae-b159-4ace-952d-ed47cf2c3f98	hello live session	patrick	this is hell song live session	2025-06-01 12:33:00	60	https://youtu.be/mHONNcZbwDY?feature=shared	f	2025-06-01 00:31:24.99009-07	2025-07-22 07:19:13.638488-07
+\.
+
+
+--
+-- TOC entry 5037 (class 0 OID 16541)
+-- Dependencies: 224
+-- Data for Name: nano_flickers; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.nano_flickers (id, nano_flicker, user_email, created_at, updated_at, created_by, updated_by) FROM stdin;
+3ebf64d1-5fd2-4d74-ad51-824e5bf9caf7	t	user@example.com	2025-05-21 07:06:41.212837-07	\N	user@example.com	\N
+83743240-08b4-4f79-b355-88658e98a437	f	user@example.com	2025-05-21 07:06:48.317327-07	\N	user@example.com	\N
+fc5c9ef2-b480-4b1d-bbf4-8b09e30b3231	t	user@example.com	2025-05-21 07:06:55.818689-07	\N	user@example.com	\N
+6793c839-4ed7-4ea3-80f9-9ec3efa0f78d	f	user@example.com	2025-06-01 09:22:33.184467-07	\N	user@example.com	\N
+a39cdd13-6f2f-4b70-a427-1cde0f4ceb82	t	user@example.com	2025-06-01 09:22:34.124412-07	\N	user@example.com	\N
+\.
+
+
+--
+-- TOC entry 5032 (class 0 OID 16477)
+-- Dependencies: 219
+-- Data for Name: news; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.news (id, title, summary, content, image_url, publish_date, created_at, updated_at) FROM stdin;
+04a70dcb-41b5-4a91-a5c8-6b9fa25b35f5	string	string	string	http://localhost:8000/uploads/0e6e389e-2268-46b0-8b2d-671558fcc8f5.png	2025-07-18	2025-07-18 06:54:03.848864-07	2025-07-29 11:25:27.232308-07
+b62718db-be6a-41d8-8680-6aa63a266803	Non ullamco mollit N	Dolor architecto qui	Dolorum ut excepturi	http://localhost:8000/uploads/f8555e16-169b-4f18-b561-a59f7543208f.jpg	2017-04-02	2025-05-30 10:42:51.026898-07	2025-07-29 11:25:39.879917-07
+5b366029-fac6-4704-a683-84e0c814f4ec	Voluptate modi asper	Ad aut atque sint s	Labore velit eiusmo	http://localhost:8000/uploads/cde2ee71-063c-49a2-8362-8e16661a0b1e.jpeg	2000-01-14	2025-05-30 10:42:37.197831-07	2025-07-29 11:25:52.160354-07
+\.
+
+
+--
+-- TOC entry 5033 (class 0 OID 16485)
+-- Dependencies: 220
+-- Data for Name: sounds; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.sounds (id, sound, user_email, created_at, updated_at, created_by, updated_by) FROM stdin;
+de431ea8-53ce-44ac-a07b-14498ff9b516	t	user@example.com	2025-05-21 07:06:37.492915-07	\N	user@example.com	user@example.com
+4adbc387-2bdf-44ea-b746-b4299eb92769	f	user@example.com	2025-05-21 07:06:45.462972-07	\N	user@example.com	user@example.com
+45f26330-7eeb-47c5-8291-66d1f7529330	t	user@example.com	2025-05-21 07:06:56.640772-07	\N	user@example.com	user@example.com
+4a256148-b6a2-427d-896a-f178ebd2ea10	f	user@example.com	2025-06-01 09:21:49.733455-07	\N	user@example.com	user@example.com
+5aa7286d-c98e-4300-b3ed-b40f3681c92c	t	user@example.com	2025-06-01 09:21:52.417028-07	\N	user@example.com	user@example.com
+6f56fc80-9595-4a54-bf08-a5bb29424ed8	f	user@example.com	2025-07-29 08:33:19.698424-07	\N	user@example.com	user@example.com
+85744d0c-0e7c-46bd-a93a-9e55e7b4d70b	f	user@example.com	2025-07-29 08:33:20.767073-07	\N	user@example.com	user@example.com
+\.
+
+
+--
+-- TOC entry 5034 (class 0 OID 16499)
+-- Dependencies: 221
+-- Data for Name: steams; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.steams (id, steam, user_email, created_at, updated_at, created_by, updated_by) FROM stdin;
+50652099-7cff-46db-b753-b81d0be51229	t	user@example.com	2025-05-21 07:06:40.099342-07	\N	user@example.com	\N
+0a8457d5-9c81-4fd9-897c-29bb142c7406	f	user@example.com	2025-05-21 07:06:46.948214-07	\N	user@example.com	\N
+52a18cd6-a6c0-4f2a-bcf0-32cab22aa055	t	user@example.com	2025-05-21 07:06:47.04068-07	\N	user@example.com	\N
+fe064ae7-d879-4d86-9774-cdd38ef24d3f	f	user@example.com	2025-05-21 07:06:57.934662-07	\N	user@example.com	\N
+e8a6fc43-4ffc-4383-84e5-c24f17610a7a	f	user@example.com	2025-06-01 09:21:42.032614-07	2025-06-01 09:26:12.096565-07	user@example.com	\N
+3fe46396-25f9-43b4-91f7-ef39dc94cd00	t	user@example.com	2025-07-29 08:30:42.999385-07	\N	user@example.com	\N
+93881d1d-cbef-4a9f-b2b2-51b0c08389c3	f	user@example.com	2025-07-29 08:30:45.117718-07	\N	user@example.com	\N
+0b0a89b1-2499-4447-ab33-f59b3f3458df	t	user@example.com	2025-07-29 08:33:23.084196-07	\N	user@example.com	\N
+3b5cec5b-550a-4092-ae4e-17c880d3fc41	f	user@example.com	2025-07-29 08:33:23.716626-07	\N	user@example.com	\N
+\.
+
+
+--
+-- TOC entry 5035 (class 0 OID 16513)
+-- Dependencies: 222
+-- Data for Name: temp_tanks; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.temp_tanks (id, temp_tank, user_email, created_at, updated_at, created_by, updated_by) FROM stdin;
+\.
+
+
+--
+-- TOC entry 5030 (class 0 OID 16459)
+-- Dependencies: 217
+-- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.users (id, email, password_hash, role, full_name, gender, dob, nationality, phone, city, country, occupation, marital_status, sleep_hours, exercise_frequency, smoking_status, alcohol_consumption, user_status, refresh_token, created_at, updated_at, created_by, updated_by) FROM stdin;
+532b5d28-cec4-4ced-ad8b-58f35f589e5e	admin@example.com	$2b$12$ALuRKC1clq09K5FX5oGsH.cggNrEp4krHlBvYErN4/1nXIx6aOAdC	Admin	admin	male	2025-05-21	America	0123456	New York	USA	california	single	3	never	non_smoker	never	active	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbkBleGFtcGxlLmNvbSIsImV4cCI6MTc1Mzg5OTkwN30.YxBS378B4SoWKobOp9cd5qXtuRqvHG_A3d0gt2ZVI40	2025-05-21 06:25:37.39561-07	2025-07-29 11:25:06.835526-07	admin@example.com	admin@example.com
+206f050e-f7b3-4aa2-96da-9911f4135048	user@example.com	$2b$12$ZpMGF4My.Afvaqz/Dt5FRepcASoHpfGGal2vqbzSwPgozqSruvYNK	User	jack	male	2025-05-21	Pakistan	0123456	wah cantt	USA	california	single	3	never	non_smoker	never	active	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyQGV4YW1wbGUuY29tIiwiZXhwIjoxNzUzOTAwNjM2fQ.0rqfqRS39KlJfFOUCzoqfgU9lL987hQVKxg1PIpwRZk	2025-05-21 06:26:43.047305-07	2025-07-29 11:37:15.533278-07	user@example.com	admin@example.com
+e34ec897-1e3b-43b3-81b6-a799f1f5fc3c	atiq@example.com	$2b$12$hCqiTh/pOOacZ9fCsX9bTeaaY8y.5fbLS6oIroKgCBlm3Lu87T6LS	User	Ati Khan 	male	2002-02-22	Quo Enim Ullam Est Enim Aliqua Vitae Modi Quibus	+1 (499) 116-2413	Ullamco Omnis Exercitation Qui Nulla Aut Iusto Ita	Incididunt Et Minima Pariatur Quos Veritatis Inve	Culpa voluptas amet ut voluptatem voluptate provident consequatur iure nulla veniam quis enim ne	single	6	never	former_smoker	never	active	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhdGlxQGV4YW1wbGUuY29tIiwiZXhwIjoxNzUzMjgxODYzfQ.pWHIs54F2vAvGRx_bDI0azayL1d44eiihYnAt02RmNA	2025-07-22 07:44:02.437197-07	2025-07-22 07:44:22.956621-07	atiq@example.com	atiq@example.com
+\.
+
+
+--
+-- TOC entry 5036 (class 0 OID 16527)
+-- Dependencies: 223
+-- Data for Name: water_pumps; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.water_pumps (id, water_pump, user_email, created_at, updated_at, created_by, updated_by) FROM stdin;
+459a4c6f-c294-4b1e-8cf3-bbadc2a257fb	t	user@example.com	2025-05-21 07:06:42.898135-07	\N	user@example.com	\N
+b0c363b9-55c8-4267-ac68-3e4fa04c3cf4	f	user@example.com	2025-05-21 07:06:58.775253-07	\N	user@example.com	\N
+1067ae66-fc04-490d-87df-7efbae06bf61	t	user@example.com	2025-06-01 09:21:44.446497-07	\N	user@example.com	\N
+fcbc6d86-c3ab-4e9c-af76-a81e2d8e0970	f	user@example.com	2025-06-01 09:21:45.483848-07	\N	user@example.com	\N
+5571daa8-01e1-4626-8f69-e9cebb6a6585	t	user@example.com	2025-07-29 08:30:47.663235-07	\N	user@example.com	\N
+7d877230-3c7e-4aff-bc95-f846877845f5	f	user@example.com	2025-07-29 08:30:48.210742-07	\N	user@example.com	\N
+7e797645-17a7-4322-8de6-2c66517a11a7	t	user@example.com	2025-07-29 08:31:10.831595-07	\N	user@example.com	\N
+ef727f46-bde8-43b1-b46a-f1f1c69bc0a2	f	user@example.com	2025-07-29 08:31:11.274384-07	\N	user@example.com	\N
+\.
+
+
+--
+-- TOC entry 4874 (class 2606 OID 17382)
+-- Name: about about_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.about
+    ADD CONSTRAINT about_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4860 (class 2606 OID 16576)
+-- Name: biofeedbacks biofeedbacks_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.biofeedbacks
+    ADD CONSTRAINT biofeedbacks_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4866 (class 2606 OID 16604)
+-- Name: brain_monitorings brain_monitorings_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.brain_monitorings
+    ADD CONSTRAINT brain_monitorings_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4863 (class 2606 OID 16590)
+-- Name: burn_progresses burn_progresses_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.burn_progresses
+    ADD CONSTRAINT burn_progresses_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4872 (class 2606 OID 17374)
+-- Name: contact contact_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.contact
+    ADD CONSTRAINT contact_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4869 (class 2606 OID 16618)
+-- Name: heart_brain_synchronicities heart_brain_synchronicities_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.heart_brain_synchronicities
+    ADD CONSTRAINT heart_brain_synchronicities_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4858 (class 2606 OID 16562)
+-- Name: led_colors led_colors_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.led_colors
+    ADD CONSTRAINT led_colors_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4838 (class 2606 OID 16476)
+-- Name: live_session live_session_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.live_session
+    ADD CONSTRAINT live_session_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4855 (class 2606 OID 16548)
+-- Name: nano_flickers nano_flickers_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.nano_flickers
+    ADD CONSTRAINT nano_flickers_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4840 (class 2606 OID 16484)
+-- Name: news news_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.news
+    ADD CONSTRAINT news_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4843 (class 2606 OID 16492)
+-- Name: sounds sounds_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.sounds
+    ADD CONSTRAINT sounds_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4846 (class 2606 OID 16506)
+-- Name: steams steams_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.steams
+    ADD CONSTRAINT steams_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4849 (class 2606 OID 16520)
+-- Name: temp_tanks temp_tanks_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.temp_tanks
+    ADD CONSTRAINT temp_tanks_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4836 (class 2606 OID 16466)
+-- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4852 (class 2606 OID 16534)
+-- Name: water_pumps water_pumps_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.water_pumps
+    ADD CONSTRAINT water_pumps_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4861 (class 1259 OID 16582)
+-- Name: ix_biofeedbacks_id; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX ix_biofeedbacks_id ON public.biofeedbacks USING btree (id);
+
+
+--
+-- TOC entry 4867 (class 1259 OID 16610)
+-- Name: ix_brain_monitorings_id; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX ix_brain_monitorings_id ON public.brain_monitorings USING btree (id);
+
+
+--
+-- TOC entry 4864 (class 1259 OID 16596)
+-- Name: ix_burn_progresses_id; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX ix_burn_progresses_id ON public.burn_progresses USING btree (id);
+
+
+--
+-- TOC entry 4870 (class 1259 OID 16624)
+-- Name: ix_heart_brain_synchronicities_id; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX ix_heart_brain_synchronicities_id ON public.heart_brain_synchronicities USING btree (id);
+
+
+--
+-- TOC entry 4856 (class 1259 OID 16568)
+-- Name: ix_led_colors_id; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX ix_led_colors_id ON public.led_colors USING btree (id);
+
+
+--
+-- TOC entry 4853 (class 1259 OID 16554)
+-- Name: ix_nano_flickers_id; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX ix_nano_flickers_id ON public.nano_flickers USING btree (id);
+
+
+--
+-- TOC entry 4841 (class 1259 OID 16498)
+-- Name: ix_sounds_id; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX ix_sounds_id ON public.sounds USING btree (id);
+
+
+--
+-- TOC entry 4844 (class 1259 OID 16512)
+-- Name: ix_steams_id; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX ix_steams_id ON public.steams USING btree (id);
+
+
+--
+-- TOC entry 4847 (class 1259 OID 16526)
+-- Name: ix_temp_tanks_id; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX ix_temp_tanks_id ON public.temp_tanks USING btree (id);
+
+
+--
+-- TOC entry 4833 (class 1259 OID 16467)
+-- Name: ix_users_email; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE UNIQUE INDEX ix_users_email ON public.users USING btree (email);
+
+
+--
+-- TOC entry 4834 (class 1259 OID 16468)
+-- Name: ix_users_id; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX ix_users_id ON public.users USING btree (id);
+
+
+--
+-- TOC entry 4850 (class 1259 OID 16540)
+-- Name: ix_water_pumps_id; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX ix_water_pumps_id ON public.water_pumps USING btree (id);
+
+
+--
+-- TOC entry 4881 (class 2606 OID 16577)
+-- Name: biofeedbacks biofeedbacks_user_email_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.biofeedbacks
+    ADD CONSTRAINT biofeedbacks_user_email_fkey FOREIGN KEY (user_email) REFERENCES public.users(email);
+
+
+--
+-- TOC entry 4883 (class 2606 OID 16605)
+-- Name: brain_monitorings brain_monitorings_user_email_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.brain_monitorings
+    ADD CONSTRAINT brain_monitorings_user_email_fkey FOREIGN KEY (user_email) REFERENCES public.users(email);
+
+
+--
+-- TOC entry 4882 (class 2606 OID 16591)
+-- Name: burn_progresses burn_progresses_user_email_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.burn_progresses
+    ADD CONSTRAINT burn_progresses_user_email_fkey FOREIGN KEY (user_email) REFERENCES public.users(email);
+
+
+--
+-- TOC entry 4884 (class 2606 OID 16619)
+-- Name: heart_brain_synchronicities heart_brain_synchronicities_user_email_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.heart_brain_synchronicities
+    ADD CONSTRAINT heart_brain_synchronicities_user_email_fkey FOREIGN KEY (user_email) REFERENCES public.users(email);
+
+
+--
+-- TOC entry 4880 (class 2606 OID 16563)
+-- Name: led_colors led_colors_user_email_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.led_colors
+    ADD CONSTRAINT led_colors_user_email_fkey FOREIGN KEY (user_email) REFERENCES public.users(email);
+
+
+--
+-- TOC entry 4879 (class 2606 OID 16549)
+-- Name: nano_flickers nano_flickers_user_email_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.nano_flickers
+    ADD CONSTRAINT nano_flickers_user_email_fkey FOREIGN KEY (user_email) REFERENCES public.users(email);
+
+
+--
+-- TOC entry 4875 (class 2606 OID 16493)
+-- Name: sounds sounds_user_email_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.sounds
+    ADD CONSTRAINT sounds_user_email_fkey FOREIGN KEY (user_email) REFERENCES public.users(email);
+
+
+--
+-- TOC entry 4876 (class 2606 OID 16507)
+-- Name: steams steams_user_email_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.steams
+    ADD CONSTRAINT steams_user_email_fkey FOREIGN KEY (user_email) REFERENCES public.users(email);
+
+
+--
+-- TOC entry 4877 (class 2606 OID 16521)
+-- Name: temp_tanks temp_tanks_user_email_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.temp_tanks
+    ADD CONSTRAINT temp_tanks_user_email_fkey FOREIGN KEY (user_email) REFERENCES public.users(email);
+
+
+--
+-- TOC entry 4878 (class 2606 OID 16535)
+-- Name: water_pumps water_pumps_user_email_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.water_pumps
+    ADD CONSTRAINT water_pumps_user_email_fkey FOREIGN KEY (user_email) REFERENCES public.users(email);
+
+
+-- Completed on 2025-07-30 18:05:14
+
+--
+-- PostgreSQL database dump complete
+--
+
