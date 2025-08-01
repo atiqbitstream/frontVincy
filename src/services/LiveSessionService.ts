@@ -3,7 +3,10 @@ import axios from 'axios';
 import { useAuth } from '../hooks/useAuth'; // Import the useAuth hook
 
 // API base URL - adjust this to match your backend URL
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://backvincy.onrender.com'
+
+
+
 
 // Types
 export interface LiveSession {
