@@ -11,7 +11,7 @@ const About = () => {
   useEffect(() => {
     const fetchAboutData = async () => {
       try {
-        const response = await fetch('http://127.0.0.1:8000/public/about');
+        const response = await fetch('https://backvincy.onrender.com/public/about');
         const data = await response.json();
         setAboutData(data);
       } catch (error) {
