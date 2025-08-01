@@ -11,7 +11,7 @@ interface NewsItem {
   image_url: string;
   publish_date: string;
 }
-
+ 
 const API_URL = import.meta.env.VITE_API_URL;
 
 const News = () => {
