@@ -92,8 +92,7 @@ const Landing = () => {
               Wellness Optimal Mind Body
             </h2>
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Revolutionizing healthcare through innovative technology and expert therapeutic care. 
-              Experience the future of wellness management today.
+              {aboutData?.hero_description || "Revolutionizing healthcare through innovative technology and expert therapeutic care. Experience the future of wellness management today."}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" asChild className="text-lg px-8 py-6">

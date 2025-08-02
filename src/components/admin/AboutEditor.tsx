@@ -18,6 +18,7 @@ const AboutEditor = () => {
     id: undefined,
     title: "",
     subtitle: "",
+    hero_description: "",
     image_url: "",
     heading: "",
     content: "",
@@ -290,6 +291,19 @@ const AboutEditor = () => {
                   name="subtitle"
                   value={aboutData.subtitle}
                   onChange={handleChange}
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="hero_description">Hero Description</Label>
+                <textarea
+                  id="hero_description"
+                  name="hero_description"
+                  className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  rows={3}
+                  value={aboutData.hero_description}
+                  onChange={handleChange}
+                  placeholder="Enter the hero section description that appears below the main title..."
                 />
               </div>
             </div>
