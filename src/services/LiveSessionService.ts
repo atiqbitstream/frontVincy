@@ -17,6 +17,7 @@ export interface LiveSession {
   date_time: string;
   duration_minutes: number;
   youtube_link: string | null;
+  image_url: string | null;
   livestatus: boolean;
   created_at: string;
   updated_at: string | null;
@@ -101,7 +102,7 @@ const createAuthenticatedService = (token: string | null) => {
         date: session.date_time,
         duration: session.duration_minutes.toString(),
         host: session.host,
-        thumbnail: `/api/placeholder/400/320`, // Placeholder image
+        thumbnail: session.image_url || `/api/placeholder/400/320`, // Use actual image or placeholder
         videoUrl,
         viewCount: Math.floor(Math.random() * 200) + 50, // Mock view count
       };

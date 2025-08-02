@@ -29,6 +29,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Loader2, Image } from "lucide-react";
 
 // LiveSession type based on backend schema
 interface LiveSession {
@@ -39,6 +41,7 @@ interface LiveSession {
   date_time: string;
   duration_minutes: number;
   youtube_link: string | null;
+  image_url: string | null;
   created_at: string;
   updated_at: string | null;
   livestatus: boolean; // Added the new livestatus field
@@ -52,6 +55,7 @@ interface LiveSessionPayload {
   date_time: string;
   duration_minutes: number;
   youtube_link: string | null;
+  image_url: string | null;
   livestatus: boolean; // Added the new livestatus field
 }
 
@@ -65,6 +69,8 @@ const LiveSessionManager = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [dateFilter, setDateFilter] = useState<string>("");
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [imageUploadType, setImageUploadType] = useState<"url" | "file">("url");
+  const [uploadingImage, setUploadingImage] = useState(false);
   
   // Fetch live session data on component mount
   useEffect(() => {
@@ -131,6 +137,7 @@ const LiveSessionManager = () => {
       date_time: tomorrow.toISOString(),
       duration_minutes: 60,
       youtube_link: "",
+      image_url: null,
       created_at: new Date().toISOString(),
       updated_at: null,
       livestatus: false // Initialize with livestatus off
@@ -152,12 +159,16 @@ const LiveSessionManager = () => {
   const handleInputChange = (field: string, value: string | number | boolean) => {
     if (!liveSession) return;
 
+    console.log(`Updating field ${field} with value:`, value);
+
     setLiveSession(prev => {
       if (!prev) return null;
-      return {
+      const updated = {
         ...prev,
         [field]: value
       };
+      console.log("Updated live session state:", updated);
+      return updated;
     });
   };
 
@@ -171,9 +182,12 @@ const LiveSessionManager = () => {
         description: liveSession.description,
         date_time: liveSession.date_time,
         duration_minutes: liveSession.duration_minutes,
-        youtube_link: liveSession.youtube_link,
+        youtube_link: liveSession.youtube_link || null,
+        image_url: liveSession.image_url || null,
         livestatus: liveSession.livestatus
       };
+
+      console.log("Creating live session with payload:", payload);
 
       const response = await fetch(`${API_URL}/admin/live-session/`, {
         method: "POST",
@@ -189,6 +203,7 @@ const LiveSessionManager = () => {
       }
 
       const newSession = await response.json();
+      console.log("Live session created:", newSession);
       setLiveSession(newSession);
       
       // Add to all sessions list
@@ -213,9 +228,12 @@ const LiveSessionManager = () => {
         description: liveSession.description,
         date_time: liveSession.date_time,
         duration_minutes: liveSession.duration_minutes,
-        youtube_link: liveSession.youtube_link,
+        youtube_link: liveSession.youtube_link || null,
+        image_url: liveSession.image_url || null,
         livestatus: liveSession.livestatus
       };
+
+      console.log("Updating live session with payload:", payload);
 
       const response = await fetch(`${API_URL}/admin/live-session/${liveSession.id}`, {
         method: "PUT",
@@ -231,6 +249,7 @@ const LiveSessionManager = () => {
       }
 
       const updatedSession = await response.json();
+      console.log("Live session updated:", updatedSession);
       setLiveSession(updatedSession);
       
       // Update in the all sessions list
@@ -322,6 +341,48 @@ const LiveSessionManager = () => {
       await createSession();
     }
     setIsEditing(false);
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    console.log("Uploading file:", file.name);
+    setUploadingImage(true);
+
+    try {
+      // Create FormData for file upload
+      const formData = new FormData();
+      formData.append('file', file);
+
+      // Upload file to backend
+      const response = await fetch(`${API_URL}/admin/upload/image`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload image');
+      }
+
+      const result = await response.json();
+      console.log("Image upload result:", result);
+      
+      // Use the full URL path returned from backend
+      const imageUrl = `${API_URL}${result.file_url}`;
+      console.log("Setting image URL to:", imageUrl);
+      handleInputChange('image_url', imageUrl);
+      
+      toast.success('Image uploaded successfully');
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast.error('Failed to upload image');
+    } finally {
+      setUploadingImage(false);
+    }
   };
 
   const handleLiveStatusToggle = (checked: boolean) => {
@@ -503,6 +564,71 @@ const LiveSessionManager = () => {
                     placeholder="https://youtube.com/watch?v=..."
                   />
                 </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Session Image</label>
+                  <Tabs defaultValue={imageUploadType} onValueChange={(val) => setImageUploadType(val as "url" | "file")}>
+                    <TabsList className="mb-4">
+                      <TabsTrigger value="url">URL</TabsTrigger>
+                      <TabsTrigger value="file">Upload</TabsTrigger>
+                    </TabsList>
+                    
+                    <TabsContent value="url">
+                      <Input 
+                        value={liveSession.image_url || ''} 
+                        onChange={(e) => handleInputChange('image_url', e.target.value)}
+                        placeholder="https://example.com/image.jpg"
+                      />
+                    </TabsContent>
+                    
+                    <TabsContent value="file">
+                      <div className="mt-2">
+                        <div className="flex items-center justify-center w-full">
+                          <label htmlFor="session-image-upload" className="cursor-pointer w-full">
+                            <div className={`border-2 border-dashed rounded-lg flex flex-col items-center justify-center h-32 ${uploadingImage ? 'border-health-primary' : 'border-gray-300 hover:border-health-primary'}`}>
+                              {uploadingImage ? (
+                                <div className="text-center">
+                                  <Loader2 className="h-8 w-8 animate-spin text-health-primary mx-auto mb-2" />
+                                  <p className="text-sm text-gray-500">Uploading...</p>
+                                </div>
+                              ) : (
+                                <div className="text-center">
+                                  <div className="flex justify-center mb-2">
+                                    <Image className="w-6 h-6 text-gray-400" />
+                                  </div>
+                                  <p className="text-sm text-gray-500">Click to upload or drag and drop</p>
+                                  <p className="text-xs text-gray-400 mt-1">PNG, JPG, GIF up to 5MB</p>
+                                </div>
+                              )}
+                            </div>
+                            <input
+                              id="session-image-upload"
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={handleFileUpload}
+                              disabled={uploadingImage}
+                            />
+                          </label>
+                        </div>
+                      </div>
+                    </TabsContent>
+                  </Tabs>
+                  
+                  {liveSession.image_url && (
+                    <div className="mt-2">
+                      <div className="relative h-32 rounded-md overflow-hidden">
+                        <img 
+                          src={liveSession.image_url} 
+                          alt="Session Preview" 
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute bottom-0 left-0 right-0 bg-black/40 text-white px-2 py-1 text-xs">
+                          Preview
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
                 <div className="flex items-center space-x-2">
                   <Switch
                     id="edit-livestatus"
@@ -548,6 +674,18 @@ const LiveSessionManager = () => {
                     <p className="text-gray-600">No YouTube link available</p>
                   )}
                 </div>
+                {liveSession.image_url && (
+                  <div>
+                    <h4 className="font-medium text-gray-800 mb-2">Session Image:</h4>
+                    <div className="relative h-32 rounded-md overflow-hidden">
+                      <img 
+                        src={liveSession.image_url} 
+                        alt="Session Image" 
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>

@@ -3,6 +3,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ArrowRight, Play, Heart, Brain, Calendar, Mail, Phone, MapPin, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -13,6 +19,8 @@ const Landing = () => {
   const [aboutData, setAboutData] = useState(null);
   const [contactData, setContactData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [selectedNews, setSelectedNews] = useState(null);
+  const [isNewsModalOpen, setIsNewsModalOpen] = useState(false);
 
   // Fetch all data
   useEffect(() => {
@@ -60,6 +68,16 @@ const Landing = () => {
       setLoading(false);
     });
   }, []);
+
+  const handleReadMore = (news) => {
+    setSelectedNews(news);
+    setIsNewsModalOpen(true);
+  };
+
+  const closeNewsModal = () => {
+    setSelectedNews(null);
+    setIsNewsModalOpen(false);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -129,14 +147,7 @@ const Landing = () => {
                   <h3 className="text-2xl font-semibold text-foreground">
                     {aboutData?.title || "About W.O.M.B"}
                   </h3>
-                  <p className="text-muted-foreground leading-relaxed">
-                    {aboutData?.subtitle || aboutData?.description || "We are dedicated to revolutionizing healthcare through cutting-edge wellness technology."}
-                  </p>
-                  {aboutData?.content && (
-                    <p className="text-muted-foreground leading-relaxed">
-                      {aboutData.content}
-                    </p>
-                  )}
+                  
                   {(aboutData?.heading && aboutData?.content) && (
                     <div className="bg-[hsl(var(--health-primary))]/5 p-4 rounded-lg">
                       <h4 className="font-semibold text-[hsl(var(--health-primary))] mb-2">{aboutData.heading}</h4>
@@ -210,8 +221,17 @@ const Landing = () => {
                       <p className="text-muted-foreground mb-4 line-clamp-2">
                         {news.summary}
                       </p>
-                      <div className="text-sm text-muted-foreground">
-                        {new Date(news.publish_date).toLocaleDateString()}
+                      <div className="flex justify-between items-center">
+                        <div className="text-sm text-muted-foreground">
+                          {new Date(news.publish_date).toLocaleDateString()}
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleReadMore(news)}
+                        >
+                          Read More
+                        </Button>
                       </div>
                     </div>
                   </CardContent>
@@ -296,7 +316,7 @@ const Landing = () => {
                     
                     <div className="relative">
                       <img 
-                        src="https://images.unsplash.com/photo-1649972904349-6e44c42644a7" 
+                        src={liveSessionData.image_url || "https://images.unsplash.com/photo-1649972904349-6e44c42644a7"} 
                         alt="Live Session" 
                         className="w-full h-48 object-cover rounded-lg"
                       />
@@ -358,7 +378,7 @@ const Landing = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <Card className="p-6">
                   <CardContent className="p-0">
-                    <h3 className="text-xl font-semibold text-foreground mb-6">Contact Information</h3>
+                    <h3 className="text-xl font-semibold text-foreground mb-6">Contact Us</h3>
                     <div className="space-y-4">
                       {contactData?.email && (
                         <div className="flex items-center space-x-3">
@@ -428,11 +448,7 @@ const Landing = () => {
                           <ArrowRight className="ml-2 h-4 w-4" />
                         </Link>
                       </Button>
-                      <Button variant="outline" asChild className="w-full">
-                        <Link to="/contact">
-                          View Full Contact Page
-                        </Link>
-                      </Button>
+            
                     </div>
                     <div className="mt-6 p-4 bg-background/50 rounded-lg">
                       <p className="text-sm text-muted-foreground text-center">
@@ -469,6 +485,37 @@ const Landing = () => {
           </div>
         </div>
       </section>
+
+      {/* News Reading Modal */}
+      <Dialog open={isNewsModalOpen} onOpenChange={closeNewsModal}>
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+          {selectedNews && (
+            <>
+              <DialogHeader>
+                <DialogTitle>{selectedNews.title}</DialogTitle>
+              </DialogHeader>
+              <div className="py-4">
+                {selectedNews.image_url && (
+                  <div className="w-full h-64 bg-gray-100 rounded-md mb-4 overflow-hidden">
+                    <img 
+                      src={selectedNews.image_url}
+                      alt={selectedNews.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+                <p className="text-sm text-gray-500 mb-4">
+                  Published: {selectedNews.publish_date ? new Date(selectedNews.publish_date).toLocaleDateString() : ''}
+                </p>
+                <p className="font-semibold mb-4">{selectedNews.summary}</p>
+                <div className="prose max-w-none">
+                  <p className="whitespace-pre-line">{selectedNews.content}</p>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
