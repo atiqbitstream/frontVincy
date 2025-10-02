@@ -134,3 +134,112 @@ export const isTokenExpired = (token: string): boolean => {
     return true;
   }
 };
+
+// Hub API functions
+export interface HubItem {
+  id: string;
+  page_heading: string;
+  page_subtext: string;
+  category: string;
+  description: string | null;
+  image_url: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface HubCreatePayload {
+  page_heading: string;
+  page_subtext: string;
+  category: string;
+  description: string | null;
+  image_url: string | null;
+}
+
+export interface HubUpdatePayload {
+  page_heading?: string;
+  page_subtext?: string;
+  category?: string;
+  description?: string | null;
+  image_url?: string | null;
+}
+
+// Get all hub categories
+export const getHubCategories = async (): Promise<HubItem[]> => {
+  const response = await apiGet('/admin/hub/');
+  return response.json();
+};
+
+// Create new hub category
+export const createHubCategory = async (data: HubCreatePayload): Promise<HubItem> => {
+  const response = await apiPost('/admin/hub/', data);
+  return response.json();
+};
+
+// Create hub category with image upload
+export const createHubCategoryWithImage = async (
+  category: string,
+  pageHeading: string = "Hub",
+  pageSubtext: string = "Explore Categories of Interest",
+  description: string = "",
+  imageFile: File
+): Promise<HubItem> => {
+  const formData = new FormData();
+  formData.append('category', category);
+  formData.append('page_heading', pageHeading);
+  formData.append('page_subtext', pageSubtext);
+  formData.append('description', description);
+  formData.append('image', imageFile);
+
+  const response = await apiRequest('/admin/hub/with-image', {
+    method: 'POST',
+    body: formData,
+    headers: {}, // Let browser set content-type for FormData
+  });
+  
+  return response.json();
+};
+
+// Update hub category
+export const updateHubCategory = async (id: string, data: HubUpdatePayload): Promise<HubItem> => {
+  const response = await apiPut(`/admin/hub/${id}`, data);
+  return response.json();
+};
+
+// Update hub category with image upload
+export const updateHubCategoryWithImage = async (
+  id: string,
+  category: string,
+  pageHeading: string = "Hub",
+  pageSubtext: string = "Explore Categories of Interest",
+  description: string = "",
+  imageFile?: File
+): Promise<HubItem> => {
+  const formData = new FormData();
+  formData.append('category', category);
+  formData.append('page_heading', pageHeading);
+  formData.append('page_subtext', pageSubtext);
+  formData.append('description', description);
+  
+  if (imageFile) {
+    formData.append('image', imageFile);
+  }
+
+  const response = await apiRequest(`/admin/hub/${id}/with-image`, {
+    method: 'PUT',
+    body: formData,
+    headers: {}, // Let browser set content-type for FormData
+  });
+  
+  return response.json();
+};
+
+// Delete hub category
+export const deleteHubCategory = async (id: string): Promise<void> => {
+  await apiDelete(`/admin/hub/${id}`);
+};
+
+// Get specific hub category
+export const getHubCategory = async (id: string): Promise<HubItem> => {
+  const response = await apiGet(`/admin/hub/${id}`);
+  return response.json();
+};

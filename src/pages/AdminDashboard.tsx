@@ -6,6 +6,7 @@ import AboutEditor from "@/components/admin/AboutEditor";
 import NewsManager from "@/components/admin/NewsManager";
 import ContactEditor from "@/components/admin/ContactEditor";
 import LiveSessionManager from "@/components/admin/LiveSessionManager";
+import HubManager from "@/components/admin/HubManager";
 import { useAuth } from "@/hooks/useAuth";
 
 const AdminDashboard = () => {
@@ -60,6 +61,8 @@ const AdminDashboard = () => {
         return <ContactEditor />;
       case "live-session":
         return <LiveSessionManager />;
+      case "hub":
+        return <HubManager />;
       default:
         return <div>Select a section from the navigation</div>;
     }
