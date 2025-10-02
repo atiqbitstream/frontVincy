@@ -243,3 +243,43 @@ export const getHubCategory = async (id: string): Promise<HubItem> => {
   const response = await apiGet(`/admin/hub/${id}`);
   return response.json();
 };
+
+// User Hub API functions
+export interface UserHubItem {
+  id: string;
+  name: string;
+  email: string;
+  category: string;
+  description: string | null;
+  url: string | null;
+  status: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface UserHubCreatePayload {
+  name: string;
+  email: string;
+  category: string;
+  description?: string | null;
+  url?: string | null;
+  status?: boolean;
+}
+
+// Get hub categories for public use (no auth required)
+export const getHubCategoriesPublic = async (): Promise<HubItem[]> => {
+  const response = await apiRequest('/public/hub-categories', { requiresAuth: false });
+  return response.json();
+};
+
+// Create user hub entry
+export const createUserHubEntry = async (data: UserHubCreatePayload): Promise<UserHubItem> => {
+  const response = await apiPost('/user-hub/', data);
+  return response.json();
+};
+
+// Get user hub entries
+export const getUserHubEntries = async (): Promise<UserHubItem[]> => {
+  const response = await apiGet('/user-hub/');
+  return response.json();
+};
