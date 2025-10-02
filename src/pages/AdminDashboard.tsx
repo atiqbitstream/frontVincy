@@ -2,6 +2,7 @@
 import { useState } from "react";
 import AdminNavbar from "@/components/AdminNavbar";
 import UserTable from "@/components/admin/UserTable";
+import UserHubTable from "@/components/admin/UserHubTable";
 import AboutEditor from "@/components/admin/AboutEditor";
 import NewsManager from "@/components/admin/NewsManager";
 import ContactEditor from "@/components/admin/ContactEditor";
@@ -21,12 +22,20 @@ const AdminDashboard = () => {
           <div className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold text-health-secondary">Admin Dashboard</h2>
-              <button 
-                className="bg-health-primary text-white px-4 py-2 rounded-md hover:bg-health-secondary transition-colors"
-                onClick={() => setActiveSection("users")}
-              >
-                View User Details
-              </button>
+              <div className="flex gap-3">
+                <button 
+                  className="bg-health-primary text-white px-4 py-2 rounded-md hover:bg-health-secondary transition-colors"
+                  onClick={() => setActiveSection("users")}
+                >
+                  View User Details
+                </button>
+                <button 
+                  className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition-colors"
+                  onClick={() => setActiveSection("user-hub")}
+                >
+                  View Hub Info
+                </button>
+              </div>
             </div>
             <div className="bg-white p-6 rounded-lg shadow">
               <h3 className="text-xl font-semibold mb-4">Welcome, Admin</h3>
@@ -53,6 +62,8 @@ const AdminDashboard = () => {
         );
       case "users":
         return <UserTable />;
+      case "user-hub":
+        return <UserHubTable />;
       case "about":
         return <AboutEditor />;
       case "news":
