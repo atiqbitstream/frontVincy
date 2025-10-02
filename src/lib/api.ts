@@ -283,3 +283,9 @@ export const getUserHubEntries = async (): Promise<UserHubItem[]> => {
   const response = await apiGet('/user-hub/');
   return response.json();
 };
+
+// Admin: Get user hub entries by category
+export const getUserHubEntriesByCategory = async (category: string): Promise<UserHubItem[]> => {
+  const response = await apiGet(`/admin/user-hub/category/${encodeURIComponent(category)}`);
+  return response.json();
+};

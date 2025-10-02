@@ -11,8 +11,9 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Pencil, Plus, Trash2, Loader2, Image, Grid3X3 } from "lucide-react";
+import { Pencil, Plus, Trash2, Loader2, Image, Grid3X3, Users } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { getUserHubEntriesByCategory, type UserHubItem } from "@/lib/api";
 
 // API base URL from environment
 const API_URL = import.meta.env.VITE_API_URL;
@@ -61,7 +62,11 @@ const HubManager = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
+  const [isUsersDialogOpen, setIsUsersDialogOpen] = useState(false);
   const [currentHub, setCurrentHub] = useState<HubItem | null>(null);
+  const [selectedCategoryUsers, setSelectedCategoryUsers] = useState<UserHubItem[]>([]);
+  const [selectedCategoryName, setSelectedCategoryName] = useState<string>("");
+  const [loadingUsers, setLoadingUsers] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -332,6 +337,23 @@ const HubManager = () => {
     }
   };
 
+  const handleViewUsers = async (categoryName: string) => {
+    setSelectedCategoryName(categoryName);
+    setLoadingUsers(true);
+    setIsUsersDialogOpen(true);
+    
+    try {
+      const users = await getUserHubEntriesByCategory(categoryName);
+      setSelectedCategoryUsers(users);
+    } catch (error) {
+      console.error("Failed to fetch users for category:", error);
+      toast.error("Failed to load users for this category");
+      setSelectedCategoryUsers([]);
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -397,6 +419,15 @@ const HubManager = () => {
                       Created: {new Date(hub.created_at || '').toLocaleDateString()}
                     </span>
                     <div className="space-x-2">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => handleViewUsers(hub.category)}
+                        className="text-blue-500 hover:text-blue-700"
+                        title="View Users"
+                      >
+                        <Users className="h-4 w-4" />
+                      </Button>
                       <Button 
                         variant="ghost" 
                         size="sm"
@@ -647,6 +678,84 @@ const HubManager = () => {
               ) : (
                 'Save Changes'
               )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Users Dialog */}
+      <Dialog open={isUsersDialogOpen} onOpenChange={setIsUsersDialogOpen}>
+        <DialogContent className="sm:max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Users in "{selectedCategoryName}" Category</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            {loadingUsers ? (
+              <div className="flex justify-center items-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-health-primary" />
+                <span className="ml-2">Loading users...</span>
+              </div>
+            ) : selectedCategoryUsers.length === 0 ? (
+              <div className="text-center py-12 bg-gray-50 rounded-lg">
+                <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500">No active users found in this category.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="text-sm text-gray-600 mb-4">
+                  Found {selectedCategoryUsers.length} active user{selectedCategoryUsers.length !== 1 ? 's' : ''} in this category
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {selectedCategoryUsers.map((user) => (
+                    <div key={user.id} className="bg-white border rounded-lg p-4 shadow-sm">
+                      <div className="space-y-2">
+                        <div>
+                          <span className="font-medium text-sm text-gray-600">Name:</span>
+                          <p className="font-semibold">{user.name}</p>
+                        </div>
+                        <div>
+                          <span className="font-medium text-sm text-gray-600">Email:</span>
+                          <p className="text-sm">{user.email}</p>
+                        </div>
+                        {user.description && (
+                          <div>
+                            <span className="font-medium text-sm text-gray-600">Description:</span>
+                            <p className="text-sm text-gray-700">{user.description}</p>
+                          </div>
+                        )}
+                        {user.url && (
+                          <div>
+                            <span className="font-medium text-sm text-gray-600">URL:</span>
+                            <a 
+                              href={user.url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-sm text-health-primary hover:underline block break-all"
+                            >
+                              {user.url}
+                            </a>
+                          </div>
+                        )}
+                        <div className="flex justify-between items-center pt-2 border-t">
+                          <span className="text-xs text-gray-500">
+                            Created: {new Date(user.created_at || '').toLocaleDateString()}
+                          </span>
+                          <span className={`px-2 py-1 rounded-full text-xs ${
+                            user.status ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                          }`}>
+                            {user.status ? 'Active' : 'Inactive'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsUsersDialogOpen(false)}>
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>
