@@ -41,7 +41,6 @@ export default defineConfig(({ mode }) => ({
       },
     },
     chunkSizeWarningLimit: 2000,
-    minify: 'terser',
     target: 'esnext',
   },
 }));
