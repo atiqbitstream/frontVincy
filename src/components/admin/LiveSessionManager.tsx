@@ -596,7 +596,7 @@ const LiveSessionManager = () => {
                                     <Image className="w-6 h-6 text-gray-400" />
                                   </div>
                                   <p className="text-sm text-gray-500">Click to upload or drag and drop</p>
-                                  <p className="text-xs text-gray-400 mt-1">PNG, JPG, GIF up to 5MB</p>
+                                  <p className="text-xs text-gray-400 mt-1">Session Image • Recommended: 1280x720px • PNG, JPG, GIF up to 5MB</p>
                                 </div>
                               )}
                             </div>

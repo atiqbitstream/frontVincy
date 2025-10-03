@@ -359,7 +359,7 @@ const AboutEditor = () => {
                                 <Image className="w-8 h-8 text-gray-400" />
                               </div>
                               <p className="text-sm text-gray-500">Click to upload or drag and drop</p>
-                              <p className="text-xs text-gray-400 mt-1">PNG, JPG, GIF up to 5MB</p>
+                              <p className="text-xs text-gray-400 mt-1">Hero Image • Recommended: 1920x1080px • PNG, JPG, GIF up to 5MB</p>
                             </div>
                           )}
                         </div>
@@ -499,7 +499,7 @@ const AboutEditor = () => {
                                   <Image className="w-8 h-8 text-gray-400" />
                                 </div>
                                 <p className="text-sm text-gray-500">Click to upload or drag and drop</p>
-                                <p className="text-xs text-gray-400 mt-1">PNG, JPG, GIF up to 5MB</p>
+                                <p className="text-xs text-gray-400 mt-1">Vision Image • Recommended: 1200x800px • PNG, JPG, GIF up to 5MB</p>
                               </div>
                             )}
                           </div>

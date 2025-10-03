@@ -540,7 +540,7 @@ const HubManager = () => {
                             <Image className="w-6 h-6 text-gray-400" />
                           </div>
                           <p className="text-sm text-gray-500">Click to upload image</p>
-                          <p className="text-xs text-gray-400 mt-1">PNG, JPG, GIF up to 5MB</p>
+                          <p className="text-xs text-gray-400 mt-1">Recommended: 800x600px • PNG, JPG, GIF up to 5MB</p>
                         </div>
                       )}
                     </div>
@@ -633,7 +633,7 @@ const HubManager = () => {
                             <Image className="w-6 h-6 text-gray-400" />
                           </div>
                           <p className="text-sm text-gray-500">Click to upload new image</p>
-                          <p className="text-xs text-gray-400 mt-1">PNG, JPG, GIF up to 5MB</p>
+                          <p className="text-xs text-gray-400 mt-1">Recommended: 800x600px • PNG, JPG, GIF up to 5MB</p>
                         </div>
                       )}
                     </div>

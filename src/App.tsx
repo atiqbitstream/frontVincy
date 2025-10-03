@@ -21,6 +21,8 @@ import News from "./pages/News";
 import Contact from "./pages/Contact";
 import LiveSession from "./pages/LiveSession";
 import Landing from "./pages/Landing";
+import Hub from "./pages/Hub";
+import HubDetail from "./pages/HubDetail";
 
 const queryClient = new QueryClient();
 
@@ -59,6 +61,14 @@ const App = () => (
               <Route 
                 path="/news" 
                 element={<News />} 
+              />
+              <Route 
+                path="/hub" 
+                element={<Hub />} 
+              />
+              <Route 
+                path="/hub/:category" 
+                element={<HubDetail />} 
               />
               <Route 
                 path="/contact" 
