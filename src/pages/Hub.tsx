@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Eye, Users } from "lucide-react";
+import { Eye, Users, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
 // API base URL
@@ -66,6 +66,15 @@ const Hub = () => {
   return (
     <div className="min-h-screen bg-background py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Back Button */}
+        <button
+          onClick={() => navigate('/dashboard')}
+          className="flex items-center gap-2 text-foreground/70 hover:text-foreground mb-6 transition-colors"
+        >
+          <ArrowLeft className="h-5 w-5" />
+          Back to Dashboard
+        </button>
+
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-foreground mb-4">

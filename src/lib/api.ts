@@ -253,6 +253,7 @@ export interface UserHubItem {
   description: string | null;
   url: string | null;
   status: boolean;
+  created_by: string | null;
   created_at?: string;
   updated_at?: string;
 }
@@ -264,6 +265,7 @@ export interface UserHubCreatePayload {
   description?: string | null;
   url?: string | null;
   status?: boolean;
+  created_by?: string | null;
 }
 
 // Get hub categories for public use (no auth required)

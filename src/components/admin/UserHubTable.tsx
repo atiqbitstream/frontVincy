@@ -198,6 +198,7 @@ const UserHubTable = () => {
               <TableHead>Category</TableHead>
               <TableHead>Description</TableHead>
               <TableHead>URL</TableHead>
+              <TableHead>Created By</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
@@ -227,6 +228,9 @@ const UserHubTable = () => {
                   ) : (
                     <span className="text-gray-400">No URL</span>
                   )}
+                </TableCell>
+                <TableCell className="font-medium">
+                  {userHub.created_by || 'Unknown'}
                 </TableCell>
                 <TableCell>
                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${

@@ -736,6 +736,10 @@ const HubManager = () => {
                             </a>
                           </div>
                         )}
+                        <div>
+                          <span className="font-medium text-sm text-gray-600">Created By:</span>
+                          <p className="text-sm text-gray-700">{user.created_by || 'Unknown'}</p>
+                        </div>
                         <div className="flex justify-between items-center pt-2 border-t">
                           <span className="text-xs text-gray-500">
                             Created: {new Date(user.created_at || '').toLocaleDateString()}
