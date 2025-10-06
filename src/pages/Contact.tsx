@@ -109,6 +109,54 @@ const Contact = () => {
     }));
   };
 
+  // Simple validation function
+  const validateHubForm = () => {
+    // Check for required fields
+    if (!hubForm.name || !hubForm.email || !hubForm.category) {
+      toast.error("Please fill in all required fields");
+      return false;
+    }
+
+    // Validate name - no special characters except spaces, hyphens, and apostrophes
+    const nameRegex = /^[a-zA-Z\s\-']+$/;
+    if (!nameRegex.test(hubForm.name)) {
+      toast.error("Name can only contain letters, spaces, hyphens, and apostrophes");
+      return false;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(hubForm.email)) {
+      toast.error("Please enter a valid email address");
+      return false;
+    }
+
+    // Validate description - no semicolons or other problematic characters
+    if (hubForm.description) {
+      const invalidChars = /[;<>{}[\]\\|`~]/;
+      if (invalidChars.test(hubForm.description)) {
+        toast.error("Description cannot contain special characters like ; < > { } [ ] \\ | ` ~");
+        return false;
+      }
+    }
+
+    // Validate URL format if provided
+    if (hubForm.url) {
+      // Remove whitespace
+      const cleanUrl = hubForm.url.trim();
+      
+      // Check for basic URL pattern (domain.extension format)
+      const urlRegex = /^([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(\/.*)?$|^https?:\/\/([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(\/.*)?$/;
+      
+      if (!urlRegex.test(cleanUrl)) {
+        toast.error("Please enter a valid URL (e.g., example.com or https://example.com)");
+        return false;
+      }
+    }
+
+    return true;
+  };
+
   const handleHubSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -117,8 +165,8 @@ const Contact = () => {
       return;
     }
 
-    if (!hubForm.name || !hubForm.email || !hubForm.category) {
-      toast.error("Please fill in all required fields");
+    // Run validation
+    if (!validateHubForm()) {
       return;
     }
 
@@ -130,7 +178,7 @@ const Contact = () => {
         category: hubForm.category,
         description: hubForm.description || null,
         url: hubForm.url || null,
-        status: true
+        status: false
       };
 
       await createUserHubEntry(payload);

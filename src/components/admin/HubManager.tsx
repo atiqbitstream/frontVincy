@@ -212,9 +212,36 @@ const HubManager = () => {
     }
   };
 
-  const handleSaveNew = async () => {
+  // Simple validation function for hub category
+  const validateHubForm = () => {
+    // Check for required fields
     if (!formData.category) {
       toast.error("Please fill in the category name");
+      return false;
+    }
+
+    // Validate category name - only letters, numbers, spaces, and basic punctuation
+    const categoryRegex = /^[a-zA-Z0-9\s\-&().,]+$/;
+    if (!categoryRegex.test(formData.category)) {
+      toast.error("Category name can only contain letters, numbers, spaces, hyphens, parentheses, and basic punctuation");
+      return false;
+    }
+
+    // Validate description - no problematic characters
+    if (formData.description) {
+      const invalidChars = /[;<>{}[\]\\|`~]/;
+      if (invalidChars.test(formData.description)) {
+        toast.error("Description cannot contain special characters like ; < > { } [ ] \\ | ` ~");
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  const handleSaveNew = async () => {
+    // Run validation
+    if (!validateHubForm()) {
       return;
     }
 
@@ -254,8 +281,12 @@ const HubManager = () => {
   };
 
   const handleSaveEdit = async () => {
-    if (!currentHub || !formData.category) {
-      toast.error("Please fill in the category name");
+    if (!currentHub) {
+      return;
+    }
+
+    // Run validation
+    if (!validateHubForm()) {
       return;
     }
 

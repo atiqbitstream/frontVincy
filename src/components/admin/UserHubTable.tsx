@@ -31,7 +31,7 @@ const UserHubTable = () => {
     category: "",
     description: "",
     url: "",
-    status: true
+    status: false
   });
 
   const { token } = useAuth();
@@ -88,7 +88,7 @@ const UserHubTable = () => {
       category: "",
       description: "",
       url: "",
-      status: true
+      status: false
     });
   };
 
@@ -99,11 +99,59 @@ const UserHubTable = () => {
     }));
   };
 
+  // Simple validation function
+  const validateEditForm = () => {
+    // Check for required fields
+    if (!editForm.name || !editForm.email || !editForm.category) {
+      toast.error("Please fill in all required fields");
+      return false;
+    }
+
+    // Validate name - no special characters except spaces, hyphens, and apostrophes
+    const nameRegex = /^[a-zA-Z\s\-']+$/;
+    if (!nameRegex.test(editForm.name)) {
+      toast.error("Name can only contain letters, spaces, hyphens, and apostrophes");
+      return false;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(editForm.email)) {
+      toast.error("Please enter a valid email address");
+      return false;
+    }
+
+    // Validate description - no semicolons or other problematic characters
+    if (editForm.description) {
+      const invalidChars = /[;<>{}[\]\\|`~]/;
+      if (invalidChars.test(editForm.description)) {
+        toast.error("Description cannot contain special characters like ; < > { } [ ] \\ | ` ~");
+        return false;
+      }
+    }
+
+    // Validate URL format if provided
+    if (editForm.url) {
+      // Remove whitespace
+      const cleanUrl = editForm.url.trim();
+      
+      // Check for basic URL pattern (domain.extension format)
+      const urlRegex = /^([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(\/.*)?$|^https?:\/\/([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(\/.*)?$/;
+      
+      if (!urlRegex.test(cleanUrl)) {
+        toast.error("Please enter a valid URL (e.g., example.com or https://example.com)");
+        return false;
+      }
+    }
+
+    return true;
+  };
+
   const handleSaveEdit = async () => {
     if (!selectedUserHub) return;
 
-    if (!editForm.name || !editForm.email || !editForm.category) {
-      toast.error("Please fill in all required fields");
+    // Run validation
+    if (!validateEditForm()) {
       return;
     }
 
