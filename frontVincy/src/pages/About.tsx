@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import { Card, CardContent } from "@/components/ui/card";
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
 const About = () => {
   const [aboutData, setAboutData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -11,7 +13,7 @@ const About = () => {
   useEffect(() => {
     const fetchAboutData = async () => {
       try {
-        const response = await fetch('http://127.0.0.1:8000/public/about');
+        const response = await fetch(`${API_URL}/public/about`);
         const data = await response.json();
         setAboutData(data);
       } catch (error) {
