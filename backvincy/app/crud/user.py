@@ -32,7 +32,7 @@ def create_user(db: Session, user: UserCreate):
         exercise_frequency=user.exercise_frequency,
         smoking_status=user.smoking_status,
         alcohol_consumption=user.alcohol_consumption,
-        user_status=UserStatus.inactive,  # Default to "Inactive"
+        user_status=UserStatus.pending,  # Default to "Pending" for admin approval
         created_by=user.email,  # Set created_by to the user's email
         updated_by=user.email,  # Set updated_by to the user's email)
     )

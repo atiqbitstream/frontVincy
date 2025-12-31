@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from fastapi.responses import JSONResponse
 from app.models.user import UserStatus
 from app.crud import user as user_crud  # Add this import
+from pydantic import ValidationError
 
 router = APIRouter(tags=["auth"])
 
@@ -22,7 +23,23 @@ get_current_user_dep = Depends(get_current_user)
 
 @router.post("/signup", response_model=UserOut)
 def signup(user: UserCreate, db: Session = get_db_dep):
-    return handle_signup(user, db)
+    try:
+        return handle_signup(user, db)
+    except ValidationError as e:
+        # Return validation errors in a readable format
+        error_messages = []
+        for error in e.errors():
+            field = " -> ".join(str(x) for x in error["loc"])
+            message = error["msg"]
+            error_messages.append(f"{field}: {message}")
+        raise HTTPException(
+            status_code=422,
+            detail={"message": "Validation error", "errors": error_messages}
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Signup failed: {str(e)}")
 
 
 @router.post("/login", response_model=Token)

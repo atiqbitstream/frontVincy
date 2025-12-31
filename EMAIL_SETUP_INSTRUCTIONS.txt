@@ -1,0 +1,38 @@
+Subject: Quick Setup Needed - Email Notifications for Your Website
+
+Hi,
+
+I need your help to enable automatic email notifications on your website. The system will send emails when:
+- A new user signs up (you'll get notified)
+- You approve or reject a user (they'll get notified)
+
+Since your email (info@soulresidue.net) is hosted by Google Workspace, we need to create a special "App Password" for security. This is different from your regular password.
+
+Here's what you need to do:
+
+STEP 1: Make sure 2-Step Verification is ON
+----------------------------------------------
+1. Go to: https://myaccount.google.com/security
+2. Sign in with: info@soulresidue.net
+3. Scroll down to "2-Step Verification"
+4. If it says "OFF", click it and turn it ON
+5. Follow the instructions to set it up (usually using your phone)
+
+STEP 2: Create an App Password
+----------------------------------------------
+1. Go to: https://myaccount.google.com/apppasswords
+2. You might need to sign in again
+3. Under "App name", type: Dr Vince Website
+4. Click "Create"
+5. Google will show you a 16-character password like: abcd efgh ijkl mnop
+6. COPY THIS PASSWORD (it's shown only once!)
+7. Send it to me
+
+That's it! Once I have this password, the email system will be fully working.
+
+Note: This App Password is ONLY for the website to send emails. It won't work for logging into your email account, so it's safe.
+
+Let me know if you have any questions!
+
+Thanks,
+[Your Name]

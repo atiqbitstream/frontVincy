@@ -185,6 +185,12 @@ const SignUp = () => {
     const sleepError = validateSleepHours(formData.sleep_hours);
     if (sleepError) newErrors.sleep_hours = sleepError;
     
+    // Validate required enum fields
+    if (!formData.marital_status) newErrors.marital_status = "Please select your marital status";
+    if (!formData.exercise_frequency) newErrors.exercise_frequency = "Please select exercise frequency";
+    if (!formData.smoking_status) newErrors.smoking_status = "Please select smoking status";
+    if (!formData.alcohol_consumption) newErrors.alcohol_consumption = "Please select alcohol consumption";
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -285,8 +291,28 @@ const SignUp = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validatePage2()) return;
+    
+    // Check if all required enum fields are selected
+    const missingFields: string[] = [];
+    if (!formData.gender) missingFields.push("Gender");
+    if (!formData.marital_status) missingFields.push("Marital Status");
+    if (!formData.exercise_frequency) missingFields.push("Exercise Frequency");
+    if (!formData.smoking_status) missingFields.push("Smoking Status");
+    if (!formData.alcohol_consumption) missingFields.push("Alcohol Consumption");
+    
+    if (missingFields.length > 0) {
+      setErrors(prev => ({
+        ...prev,
+        form: `Please fill in all required fields: ${missingFields.join(", ")}`
+      }));
+      return;
+    }
+    
     try {
-      const payload = { ...formData, sleep_hours: parseFloat(formData.sleep_hours) };
+      const payload = { 
+        ...formData, 
+        sleep_hours: parseFloat(formData.sleep_hours) || 7.0  // Default to 7 hours if not provided
+      };
       await signup(payload);
     } catch {}
   };
@@ -578,6 +604,12 @@ const SignUp = () => {
                     </Select>
                   </div>
                 </div>
+
+                {errors.form && (
+                  <div className="bg-red-50 border border-red-200 rounded-md p-3 mb-4">
+                    <p className="text-sm text-red-600">{errors.form}</p>
+                  </div>
+                )}
 
                 <div className="flex gap-4 pt-4">
                   <Button type="button" variant="outline" className="flex-1" onClick={handlePrevious}>

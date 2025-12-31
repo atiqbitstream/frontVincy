@@ -1,7 +1,7 @@
 // src/components/admin/UserTable.tsx
 
 import { useState, useEffect } from "react";
-import { Eye, Edit } from "lucide-react";
+import { Eye, Edit, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
@@ -159,6 +159,7 @@ const UserTable = () => {
     fields: Array<{ name: string; label: string }>;
   } | null>(null);
   const [editingUser, setEditingUser] = useState<UserOut | null>(null);
+  const [statusFilter, setStatusFilter] = useState<"All" | "Active" | "Inactive" | "Pending">("All");
 
   const { token } = useAuth();
   const API_URL = import.meta.env.VITE_API_URL;
@@ -212,9 +213,98 @@ const UserTable = () => {
   };
   const handleCloseFormHistory = () => setViewingFormData(null);
 
+  const handleExportCSV = async () => {
+    try {
+      const response = await fetch(`${API_URL}/users/export/csv`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to export CSV");
+      }
+
+      // Get the blob from the response
+      const blob = await response.blob();
+      
+      // Create a download link and trigger it
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `users_export_${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      
+      // Cleanup
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      toast.success("Users exported to CSV successfully");
+    } catch (error) {
+      console.error("Export error:", error);
+      toast.error("Failed to export users to CSV");
+    }
+  };
+
+  // Filter users based on selected status
+  const filteredUsers = statusFilter === "All" 
+    ? users 
+    : users.filter(user => user.user_status === statusFilter);
+
+  // Count users by status
+  const statusCounts = {
+    all: users.length,
+    active: users.filter(u => u.user_status === "Active").length,
+    inactive: users.filter(u => u.user_status === "Inactive").length,
+    pending: users.filter(u => u.user_status === "Pending").length,
+  };
+
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold mb-4">User Management</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold">User Management</h2>
+        <Button
+          onClick={handleExportCSV}
+          className="bg-health-primary hover:bg-health-secondary text-white"
+        >
+          <Download className="mr-2 h-4 w-4" />
+          Export to CSV
+        </Button>
+      </div>
+
+      {/* Status Filter Tabs */}
+      <div className="flex gap-2 bg-white p-2 rounded-lg shadow">
+        <Button
+          variant={statusFilter === "All" ? "default" : "outline"}
+          onClick={() => setStatusFilter("All")}
+          className="flex-1"
+        >
+          All Users ({statusCounts.all})
+        </Button>
+        <Button
+          variant={statusFilter === "Pending" ? "default" : "outline"}
+          onClick={() => setStatusFilter("Pending")}
+          className="flex-1"
+        >
+          Pending ({statusCounts.pending})
+        </Button>
+        <Button
+          variant={statusFilter === "Active" ? "default" : "outline"}
+          onClick={() => setStatusFilter("Active")}
+          className="flex-1"
+        >
+          Active ({statusCounts.active})
+        </Button>
+        <Button
+          variant={statusFilter === "Inactive" ? "default" : "outline"}
+          onClick={() => setStatusFilter("Inactive")}
+          className="flex-1"
+        >
+          Inactive ({statusCounts.inactive})
+        </Button>
+      </div>
 
       <div className="bg-white rounded-lg shadow overflow-auto">
         <Table>
@@ -229,15 +319,22 @@ const UserTable = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {users.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell className="font-medium">{user.full_name}</TableCell>
-                <TableCell>{user.email}</TableCell>
-                <TableCell>{user.country}</TableCell>
-                <TableCell>{user.occupation}</TableCell>
-                <TableCell>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    user.user_status === "Active" ? "bg-green-100 text-green-800" :
+            {filteredUsers.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center text-gray-500 py-8">
+                  No users found with status: {statusFilter}
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredUsers.map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell className="font-medium">{user.full_name}</TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>{user.country}</TableCell>
+                  <TableCell>{user.occupation}</TableCell>
+                  <TableCell>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      user.user_status === "Active" ? "bg-green-100 text-green-800" :
                     user.user_status === "Inactive" ? "bg-gray-100 text-gray-800" :
                     "bg-yellow-100 text-yellow-800"
                   }`}>
@@ -263,7 +360,8 @@ const UserTable = () => {
                   </div>
                 </TableCell>
               </TableRow>
-            ))}
+              ))
+            )}
           </TableBody>
         </Table>
       </div>

@@ -154,10 +154,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.detail || "Signup failed");
+        
+        // Handle validation errors
+        if (err.detail && typeof err.detail === 'object' && err.detail.errors) {
+          const errorMessage = err.detail.errors.join(', ');
+          throw new Error(errorMessage);
+        }
+        
+        // Handle string detail
+        const errorMsg = typeof err.detail === 'string' ? err.detail : JSON.stringify(err.detail);
+        throw new Error(errorMsg || "Signup failed");
       }
-      toast.success("Signup successful! Please log in.");
-      navigate("/login");
+      
+      // Store email and redirect to pending approval page
+      sessionStorage.setItem("accountPending", "true");
+      sessionStorage.setItem("pendingEmail", data.email);
+      toast.success("Signup successful! Your account is pending admin approval.");
+      navigate("/pending-approval", { replace: true });
     } catch (error: any) {
       console.error("Signup error:", error);
       toast.error(error.message || "Signup failed. Please try again.");
@@ -179,7 +192,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: form.toString(),
       });
-      if (!res.ok) throw new Error("Invalid credentials");
+      
+      if (!res.ok) {
+        const err = await res.json();
+        
+        // Check if error is about pending approval
+        if (err.detail && (
+          err.detail.includes("pending") || 
+          err.detail.includes("pending activation") ||
+          err.detail.includes("wait for admin approval")
+        )) {
+          // Store email and redirect to pending page
+          sessionStorage.setItem("accountPending", "true");
+          sessionStorage.setItem("pendingEmail", email);
+          toast.warning("Your account is awaiting admin approval");
+          navigate("/pending-approval", { replace: true });
+          return;
+        }
+        
+        throw new Error(err.detail || "Invalid credentials");
+      }
 
       const { access_token } = await res.json();
       localStorage.setItem("token", access_token);

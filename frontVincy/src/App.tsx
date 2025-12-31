@@ -14,6 +14,7 @@ import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 import Index from "./pages/Index";
+import PendingApproval from "./pages/PendingApproval";
 
 // Pages to create later
 import About from "./pages/About";
@@ -36,6 +37,7 @@ const App = () => (
               <Route path="/login" element={<Login />} />
               <Route path="/admin-login" element={<AdminLogin />} />
               <Route path="/signup" element={<SignUp />} />
+              <Route path="/pending-approval" element={<PendingApproval />} />
               <Route 
                 path="/dashboard" 
                 element={
