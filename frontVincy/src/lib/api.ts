@@ -26,11 +26,12 @@ export interface UserHubItem {
   name: string;
   email: string;
   category: string;
-  description?: string;
-  url?: string;
-  status: string;
-  created_at: string;
-  updated_at: string;
+  description: string | null;
+  url: string | null;
+  status: boolean;
+  created_by: string | null;
+  created_at?: string;
+  updated_at?: string;
 }
 
 // Hub Item interface for public view
@@ -45,14 +46,33 @@ export interface HubItem {
   updated_at?: string;
 }
 
+// Hub Create Payload
+export interface HubCreatePayload {
+  page_heading: string;
+  page_subtext: string;
+  category: string;
+  description: string | null;
+  image_url: string | null;
+}
+
+// Hub Update Payload
+export interface HubUpdatePayload {
+  page_heading?: string;
+  page_subtext?: string;
+  category?: string;
+  description?: string | null;
+  image_url?: string | null;
+}
+
 // User Hub Create Payload
 export interface UserHubCreatePayload {
   name: string;
   email: string;
   category: string;
-  description: string | null;
-  url: string | null;
-  status: boolean;
+  description?: string | null;
+  url?: string | null;
+  status?: boolean;
+  created_by?: string | null;
 }
 
 // Global reference to auth context functions - will be set by useAuth
@@ -171,18 +191,110 @@ export const isTokenExpired = (token: string): boolean => {
 };
 
 // Hub-specific API functions
-export const getUserHubEntriesByCategory = async (category: string): Promise<UserHubItem[]> => {
-  const response = await apiGet(`/admin/user-hub/?category=${encodeURIComponent(category)}`);
-  const data = await response.json();
-  return data;
+// Admin: Get all hub categories
+export const getHubCategories = async (): Promise<HubItem[]> => {
+  const response = await apiGet("/admin/hub/");
+  return response.json();
 };
 
+// Admin: Create hub category
+export const createHubCategory = async (data: HubCreatePayload): Promise<HubItem> => {
+  const response = await apiPost("/admin/hub/", data);
+  return response.json();
+};
+
+// Admin: Create hub category with image upload
+export const createHubCategoryWithImage = async (
+  category: string,
+  pageHeading: string = "Hub",
+  pageSubtext: string = "Explore Categories of Interest",
+  description: string = "",
+  imageFile?: File
+): Promise<HubItem> => {
+  const formData = new FormData();
+  formData.append('category', category);
+  formData.append('page_heading', pageHeading);
+  formData.append('page_subtext', pageSubtext);
+  formData.append('description', description);
+
+  if (imageFile) {
+    formData.append('image', imageFile);
+  }
+
+  const response = await apiRequest("/admin/hub/with-image", {
+    method: 'POST',
+    body: formData,
+    headers: {}, // Let browser set content-type for FormData
+  });
+
+  return response.json();
+};
+
+// Admin: Update hub category
+export const updateHubCategory = async (id: string, data: HubUpdatePayload): Promise<HubItem> => {
+  const response = await apiPut(`/admin/hub/${id}`, data);
+  return response.json();
+};
+
+// Admin: Update hub category with image upload
+export const updateHubCategoryWithImage = async (
+  id: string,
+  category: string,
+  pageHeading: string = "Hub",
+  pageSubtext: string = "Explore Categories of Interest",
+  description: string = "",
+  imageFile?: File
+): Promise<HubItem> => {
+  const formData = new FormData();
+  formData.append('category', category);
+  formData.append('page_heading', pageHeading);
+  formData.append('page_subtext', pageSubtext);
+  formData.append('description', description);
+
+  if (imageFile) {
+    formData.append('image', imageFile);
+  }
+
+  const response = await apiRequest(`/admin/hub/${id}/with-image`, {
+    method: 'PUT',
+    body: formData,
+    headers: {}, // Let browser set content-type for FormData
+  });
+
+  return response.json();
+};
+
+// Admin: Delete hub category
+export const deleteHubCategory = async (id: string): Promise<void> => {
+  await apiDelete(`/admin/hub/${id}`);
+};
+
+// Admin: Get specific hub category
+export const getHubCategory = async (id: string): Promise<HubItem> => {
+  const response = await apiGet(`/admin/hub/${id}`);
+  return response.json();
+};
+
+// Public: Get hub categories (no auth required)
 export const getHubCategoriesPublic = async (): Promise<HubItem[]> => {
-  const response = await apiGet("/public/admin-hub/categories", { requiresAuth: false });
-  const data = await response.json();
-  return data;
+  const response = await apiRequest('/public/hub-categories', { requiresAuth: false });
+  return response.json();
 };
 
-export const createUserHubEntry = async (payload: UserHubCreatePayload): Promise<void> => {
-  await apiPost("/user/user-hub/", payload);
+// User: Create hub entry
+export const createUserHubEntry = async (data: UserHubCreatePayload): Promise<UserHubItem> => {
+  const response = await apiPost('/user-hub/', data);
+  return response.json();
+};
+
+// User: Get hub entries
+export const getUserHubEntries = async (): Promise<UserHubItem[]> => {
+  const response = await apiGet('/user-hub/');
+  return response.json();
+};
+
+// Admin: Get user hub entries by category
+export const getUserHubEntriesByCategory = async (category: string): Promise<UserHubItem[]> => {
+  const response = await apiGet(`/admin/user-hub/category/${encodeURIComponent(category)}`);
+  return response.json();
 };
