@@ -6,6 +6,7 @@ import HistoryModal from "@/components/HistoryModal";
 import DataHistoryModal from "@/components/DataHistoryModal";
 import { useAuth } from "../hooks/useAuth";
 import { toast } from "sonner";
+import { apiGet, APIError } from "@/lib/api";
 import {
   Volume2,
   Lightbulb,
@@ -62,24 +63,14 @@ const Dashboard = () => {
       if (!user || !token) return;
 
       try {
-        const response = await fetch(`${API_URL}/device-controls/latest`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (response.status === 401) {
-          // Handle unauthorized
-          return;
-        }
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch device states");
-        }
-
+        const response = await apiGet("/device-controls/latest");
         const data: LatestValuesResponse = await response.json();
         setDeviceStates(data);
       } catch (error) {
+        if (error instanceof APIError && error.status === 401) {
+          // Session expired - apiGet already handles logout
+          return;
+        }
         console.error("Error loading device states:", error);
         // Only show toast error on initial load, not during polling
         if (isLoadingDevices) {

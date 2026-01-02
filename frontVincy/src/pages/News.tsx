@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import { toast } from "sonner";
-import { useAuth } from "@/hooks/useAuth"; // Import useAuth
+import { useAuth } from "@/hooks/useAuth";
+import { apiGet } from "@/lib/api"; // Import apiGet
 
 interface NewsItem {
   id: string;
@@ -12,42 +13,33 @@ interface NewsItem {
   publish_date: string;
 }
 
-const API_URL = import.meta.env.VITE_API_URL;
-
 const News = () => {
-  const { token } = useAuth(); // Get the token from useAuth
+  const { token } = useAuth();
   const [newsItems, setNewsItems] = useState<NewsItem[]>([]);
   const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchNews = async () => {
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+      
       setLoading(true);
       try {
-        const response = await fetch(`${API_URL}/news/user/news/`, {
-          headers: {
-            Authorization: `Bearer ${token}`, // Include the token in the headers
-          },
-        });
-        if (!response.ok) {
-          throw new Error("Failed to fetch news");
-        }
+        const response = await apiGet("/news/user/news/");
         const data = await response.json();
         setNewsItems(data);
       } catch (error) {
         console.error("Error fetching news:", error);
-        toast.error("Failed to load news. Please try again later.");
+        // Don't show error toast here - apiGet already handles it
       } finally {
         setLoading(false);
       }
     };
 
-    if (token) {
-      fetchNews();
-    } else {
-      console.error("No token available");
-      toast.error("You are not authorized to view this content.");
-    }
+    fetchNews();
   }, [token]);
 
   const handleReadMore = (news: NewsItem) => {
