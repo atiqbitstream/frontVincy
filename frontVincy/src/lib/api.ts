@@ -20,6 +20,19 @@ interface ApiRequestOptions extends RequestInit {
   requiresAuth?: boolean;
 }
 
+// User Hub Item interface for admin view
+export interface UserHubItem {
+  id: string;
+  name: string;
+  email: string;
+  category: string;
+  description?: string;
+  url?: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
 // Global reference to auth context functions - will be set by useAuth
 let globalLogout: (() => void) | null = null;
 
@@ -133,4 +146,11 @@ export const isTokenExpired = (token: string): boolean => {
     // If we can't decode the token, consider it expired
     return true;
   }
+};
+
+// Hub-specific API functions
+export const getUserHubEntriesByCategory = async (category: string): Promise<UserHubItem[]> => {
+  const response = await apiGet(`/admin/user-hub/?category=${encodeURIComponent(category)}`);
+  const data = await response.json();
+  return data;
 };
