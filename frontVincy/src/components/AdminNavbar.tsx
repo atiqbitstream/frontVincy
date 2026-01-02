@@ -174,7 +174,12 @@ const AdminNavbar = ({ activeSection, setActiveSection }: AdminNavbarProps) => {
                 activeSection === "contact" 
                   ? "bg-white/20 text-white" 
                   : "text-gray-200 hover:text-white"
-              }`}live-session")}
+              }`}
+            >
+              Contact Us
+            </button>
+            <button
+              onClick={() => handleNavClick("live-session")}
               className={`block w-full text-left px-3 py-2 rounded-md text-base font-medium ${
                 activeSection === "live-session" 
                   ? "bg-white/20 text-white" 
@@ -192,13 +197,6 @@ const AdminNavbar = ({ activeSection, setActiveSection }: AdminNavbarProps) => {
               }`}
             >
               Hub
-            </button  className={`block w-full text-left px-3 py-2 rounded-md text-base font-medium ${
-                activeSection === "live-session" 
-                  ? "bg-white/20 text-white" 
-                  : "text-gray-200 hover:text-white"
-              }`}
-            >
-              Live Session
             </button>
             
             <button 
