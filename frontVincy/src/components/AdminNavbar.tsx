@@ -1,6 +1,6 @@
 
 import { Link } from "react-router-dom";
-import { LogOut, Menu, X, PanelLeft, Newspaper, Phone, Video } from "lucide-react";
+import { LogOut, Menu, X, PanelLeft, Newspaper, Phone, Video, Radio } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "../hooks/useAuth";
 
@@ -87,6 +87,19 @@ const AdminNavbar = ({ activeSection, setActiveSection }: AdminNavbarProps) => {
               </span>
             </button>
             <button 
+              onClick={() => handleNavClick("hub")}
+              className={`px-3 py-2 rounded-md text-sm font-medium ${
+                activeSection === "hub" 
+                  ? "bg-white/20 text-white" 
+                  : "text-gray-200 hover:text-white"
+              }`}
+            >
+              <span className="flex items-center">
+                <Radio size={16} className="mr-1" />
+                Hub
+              </span>
+            </button>
+            <button 
               onClick={() => handleNavClick("live-session")}
               className={`px-3 py-2 rounded-md text-sm font-medium ${
                 activeSection === "live-session" 
@@ -164,6 +177,16 @@ const AdminNavbar = ({ activeSection, setActiveSection }: AdminNavbarProps) => {
               }`}
             >
               Contact Us
+            </button>
+            <button
+              onClick={() => handleNavClick("hub")}
+              className={`block w-full text-left px-3 py-2 rounded-md text-base font-medium ${
+                activeSection === "hub" 
+                  ? "bg-white/20 text-white" 
+                  : "text-gray-200 hover:text-white"
+              }`}
+            >
+              Hub
             </button>
             <button
               onClick={() => handleNavClick("live-session")}

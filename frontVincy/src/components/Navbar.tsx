@@ -193,6 +193,12 @@ const Navbar = () => {
               Contact Us
             </Link>
             <Link
+              to="/hub"
+              className="text-foreground/70 hover:text-health-primary px-3 py-2 rounded-md text-sm font-medium"
+            >
+              Hub
+            </Link>
+            <Link
               to="/live-session"
               className={`px-3 py-2 rounded-md text-sm font-medium flex items-center ${
                 liveStatus.isLive
@@ -296,6 +302,13 @@ const Navbar = () => {
               className="block px-3 py-2 rounded-md text-base font-medium text-foreground/70 hover:text-health-primary"
             >
               Contact Us
+            </Link>
+            <Link
+              to="/hub"
+              onClick={() => setIsOpen(false)}
+              className="block px-3 py-2 rounded-md text-base font-medium text-foreground/70 hover:text-health-primary"
+            >
+              Hub
             </Link>
             <Link
               to="/live-session"
