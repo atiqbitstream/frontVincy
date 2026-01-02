@@ -112,11 +112,6 @@ const AdminNavbar = ({ activeSection, setActiveSection }: AdminNavbarProps) => {
                 Hub
               </span>
             </button>
-              <span className="flex items-center">
-                <Video size={16} className="mr-1" />
-                Live Session
-              </span>
-            </button>
             
             <button 
               onClick={logout}
