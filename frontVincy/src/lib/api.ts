@@ -33,6 +33,28 @@ export interface UserHubItem {
   updated_at: string;
 }
 
+// Hub Item interface for public view
+export interface HubItem {
+  id: string;
+  page_heading: string;
+  page_subtext: string;
+  category: string;
+  description: string | null;
+  image_url: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+// User Hub Create Payload
+export interface UserHubCreatePayload {
+  name: string;
+  email: string;
+  category: string;
+  description: string | null;
+  url: string | null;
+  status: boolean;
+}
+
 // Global reference to auth context functions - will be set by useAuth
 let globalLogout: (() => void) | null = null;
 
@@ -153,4 +175,14 @@ export const getUserHubEntriesByCategory = async (category: string): Promise<Use
   const response = await apiGet(`/admin/user-hub/?category=${encodeURIComponent(category)}`);
   const data = await response.json();
   return data;
+};
+
+export const getHubCategoriesPublic = async (): Promise<HubItem[]> => {
+  const response = await apiGet("/public/admin-hub/categories", { requiresAuth: false });
+  const data = await response.json();
+  return data;
+};
+
+export const createUserHubEntry = async (payload: UserHubCreatePayload): Promise<void> => {
+  await apiPost("/user/user-hub/", payload);
 };
